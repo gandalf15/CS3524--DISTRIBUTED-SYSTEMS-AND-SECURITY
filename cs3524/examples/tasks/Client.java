@@ -35,11 +35,15 @@ public class Client
 	        
 	        //create task
 	        ShoutTask task = new ShoutTask ( message ) ;
-	        // send task to server
+	        RepeatLinesTask repeat_task = new RepeatLinesTask ( message, 10 );
+		
+		// send task to server
 	        String result = (String) remoteExecutor.doTask ( task ) ;
-	        // print result of task execution
+	        String result2 = (String) remoteExecutor.doTask ( repeat_task );
+		// print result of task execution
 	        System.out.println ( "Result : " + result ) ;
-	        
+		System.out.println ( "\n\nResult from repeat lines task: " + result2 ); 
+		 
 		}
 		catch ( java.io.IOException e) {
             System.err.println( "I/O error." );

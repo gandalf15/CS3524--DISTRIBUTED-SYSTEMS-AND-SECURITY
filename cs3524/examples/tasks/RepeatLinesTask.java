@@ -1,4 +1,4 @@
-package cs3524.examples.rmishout;
+package cs3524.examples.tasks;
 
 public class RepeatLinesTask implements TaskInterface
 {
@@ -13,7 +13,7 @@ public class RepeatLinesTask implements TaskInterface
    public Object execute()
    {
       String lines = new String ( _msg ) ;
-      for ( int i = 1; i < _n; i++ ) lines = lines + â€œ\nâ€ + _msg ;
+      for ( int i = 1; i < _n; i++ ) lines = lines + "â€œ\nâ€" + _msg ;
       return lines ;
    }
 }

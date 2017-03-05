@@ -2,6 +2,17 @@ CS3524_HOME="$(HOME)/CS3524"
 
 RM_FLAGS="-f"
 
+auction:
+	javac cs3524/examples/auction/AuctioneerImpl.java; \
+	javac cs3524/examples/auction/AuctioneerMainline.java; \
+	javac cs3524/examples/auction/BidderImpl.java; \
+	javac cs3524/examples/auction/BidderMainline.java
+
+auctionclean:
+	cd cs3524/examples/auction; \
+	rm $(RM_FLAGS) *.class *~; \
+	cd $(CS3524_HOME)
+
 rmishout:
 	javac cs3524/examples/rmishout/ShoutServerImpl.java; \
 	javac cs3524/examples/rmishout/ShoutServerMainline.java; \
