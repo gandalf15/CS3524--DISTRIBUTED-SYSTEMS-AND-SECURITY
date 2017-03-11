@@ -6,21 +6,16 @@ package cs3524.solutions.mud;
 
 import java.rmi.Remote;
 import java.rmi.RemoteException;
+import java.util.List;
 
 public interface MUDServerInterface extends Remote
 {
     
-    public String startGame() throws RemoteException;
-  
-    
-    public String getStartLocation() throws RemoteException;
-    public String location(String location) throws RemoteException;
-    public String moveDirection(String current, String direction) throws RemoteException;
-    public boolean addUser(String username) throws RemoteException;
-    public void updateUserLocation(String username, String location) throws RemoteException ;
-    public String getPlayersAtLocation(String location) throws RemoteException;
-    public boolean takeItem(String item, String location) throws RemoteException;
-    public void changeMUD(String name) throws RemoteException;
-    public String getServers() throws RemoteException;
-
+	public List<String> listServers() throws RemoteException;
+	public Boolean joinServer(String serverName) throws RemoteException;
+	public Boolean leaveServer(ClientInterface client) throws RemoteException;
+	public String createServer() throws RemoteException;
+   	public List<String> listUsers() throws RemoteException;
+	public Boolean movePlayer(ClientInterface client, String direction) throws RemoteException;
+	public Boolean messageTo(String fromUser, String toUser, String messageString) throws RemoteException;
 }
