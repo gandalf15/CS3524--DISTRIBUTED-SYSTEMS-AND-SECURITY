@@ -12,7 +12,7 @@ public class ClientImpl implements ClientInterface {
     		clientUserName = clientUserName;
 	}
 
-  	public String getName() 
+  	public String getUserName() 
 	{
     		return clientUserName;
   	}

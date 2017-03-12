@@ -7,6 +7,6 @@ import java.rmi.RemoteException;
 public interface ClientInterface extends Remote 
 {
 	public String getUserName() throws RemoteException;
-	public Boolean message( String message ) throws RemoteException;
+	public void message( String message ) throws RemoteException;
 	
 }

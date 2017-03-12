@@ -8,6 +8,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.ArrayList;
+import java.util.Set;
 import java.util.HashMap;
 
 
@@ -17,43 +18,44 @@ public class MUDServerImpl implements MUDServerInterface {
 
 	private Map<String, MUD> serversMap = new HashMap<String, MUD>(); 
 	private	Map<String, String> clientToServerMap = new HashMap<String, String>();
-	private	Map<String, Map<String, ClientInterface>> serverToClientsMap = new HashMap<String, HashMap<String, ClientInterface>>();
-	private Map<String, List<String>> clientInventoryMap = new HashMap<String, ArrayList<String>>();
+	private	Map<String, HashMap<String, ClientInterface>> serverToClientsMap = new HashMap<String, HashMap<String, ClientInterface>>();
+	private Map<String, ArrayList<String>> clientInventoryMap = new HashMap<String, ArrayList<String>>();
 	private Map<String, String> clientPositionMap = new HashMap<String, String>(); 
 
 	public MUDServerImpl() throws RemoteException
 	{ 
 		serversMap.put("Hades", new MUD("servers/hades/hades.edg","servers/hades/hades.msg","servers/hades/hades.thg"));
-		Map<String, ClientInterface> clientsMap = new HashMap<String, ClientInterface>();
+		HashMap<String, ClientInterface> clientsMap = new HashMap<String, ClientInterface>();
 		serverToClientsMap.put( "Hades", clientsMap);
 		serversMap.put("Pathos", new MUD("servers/pathos/pathos.edg","servers/pathos/pathos.msg","servers/pathos/pathos.thg"));
 		clientsMap = new HashMap<String, ClientInterface>();
-		serverToClientMap.put( "Pathos", clientsMap);
+		serverToClientsMap.put( "Pathos", clientsMap);
 	}
 
-	public List listServers() throws RemoteException {
-		List<String> serverList = servers.keySet();
-		return serverList;
+	public List<String> listServers() throws RemoteException {
+		Set<String> serversSet = serversMap.keySet();
+		return new ArrayList<String>(serversSet);
 	}
 	
 	public String joinServer(String serverName, ClientInterface client) throws RemoteException
 	{
 		MUD server = serversMap.get(serverName);
 		String clientUserName = client.getUserName();
-		Map<String, ClientInterface> clientsMap;
+		HashMap<String, ClientInterface> clientsMap;
 		if (server == null)
 		{
-			serversMap.put(clientUserName+"'s server", MUD("servers/void/void.edg","servers/void/void.msg","servers/void/void.thg"));
+			serversMap.put(clientUserName+"'s server", new MUD("servers/void/void.edg","servers/void/void.msg","servers/void/void.thg"));
 			clientToServerMap.put( clientUserName, clientUserName+"'s server" );
 			
-			clientsMap = new HashMap<String, ClientInterface>( clientUserName, client );
-			serverToClientMap.put( clientUserName+"'s server", clientsMap );
+			clientsMap = new HashMap<String, ClientInterface>();
+			clientsMap.put( clientUserName, client ); 
+			serverToClientsMap.put( clientUserName+"'s server", clientsMap );
 
 			clientPositionMap.put( clientUserName, server.startLocation() );
 			
 			clientInventoryMap.put( clientUserName, new ArrayList<String>() );
 			
-			server = servers.get(clientUserName+"'s server");
+			server = serversMap.get(clientUserName+"'s server");
 			server.addThing( server.startLocation(), "User: "+clientUserName );
 	
 			String message = "\n~~~Welcome to "+clientUserName+"'s Server~~~\n";
@@ -95,7 +97,7 @@ public class MUDServerImpl implements MUDServerInterface {
 	{
 		String serverName = clientToServerMap.get( clientUserName );
 		MUD server = serversMap.get( serverName );
-		Map<String, ClientInterface> clientsMap = serverToClientsMap.get( serverName );
+		HashMap<String, ClientInterface> clientsMap = serverToClientsMap.get( serverName );
 		String position = clientPositionMap.get( clientUserName );
 		
 		if ( serverName  == null ) 
@@ -113,7 +115,7 @@ public class MUDServerImpl implements MUDServerInterface {
 				
 	}
 	
-	public String moveUser(String userName, String direction) throws RemoteException
+	public String moveUser(String userName, String position) throws RemoteException
 	{
 		
 		return "You moved";
@@ -127,17 +129,17 @@ public class MUDServerImpl implements MUDServerInterface {
 		
 		String serverName = clientToServerMap.get( clientUserName );
 		MUD server = serversMap.get( serverName );
-		Map clientsMap = serverToClientsMap.get( serverName );
-		ClientInterface client = clientsMap.get( clientsUserName );
-		List<String> inventory = clientInventoryMap.get( clientUserName );
+		HashMap<String, ClientInterface> clientsMap = serverToClientsMap.get( serverName );
+		ClientInterface client = clientsMap.get( clientUserName );
+		ArrayList<String> inventory = clientInventoryMap.get( clientUserName );
 		String things = server.locationInfo( clientPositionMap.get( clientUserName ) );
 		String[] thingsArray = things.split("\\s+");
-		for ( String t : things )
+		for ( String t : thingsArray )
 		{
 			if ( thing == t )
 			{
-				server.delThing( clientPositionMap( clientUserName ), t );
-				inventory.put( t );
+				server.delThing( clientPositionMap.get( clientUserName ), t );
+				inventory.add( t );
 				clientInventoryMap.put( clientUserName, inventory );
 				return "You have: "+inventory.toString();
 			}
