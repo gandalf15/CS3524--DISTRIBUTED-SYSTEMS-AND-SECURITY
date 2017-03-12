@@ -1,6 +1,7 @@
 /*	Author: Marcel Zak
 *	version: 0.0
 */
+
 package cs3524.solutions.mud;
 
 import java.io.BufferedReader;
@@ -32,8 +33,8 @@ public class MUDServerMainline {
 		System.setSecurityManager( new RMISecurityManager() );
 
 		// Generate the remote objects
-		MUDServiceImpl mudserver = new MUDServerImpl();
-		MUDService mudstub = (MUDServerInterface)UnicastRemoteObject.exportObject(mudserver, serverPort);
+		MUDServerImpl mudserver = new MUDServerImpl();
+		MUDServerInterface mudstub = (MUDServerInterface)UnicastRemoteObject.exportObject(mudserver, serverPort);
 		
 		String regURL = "rmi://" + hostname + ":" + registryPort + "/MUDServer";
 		System.out.println("Registering " + regURL);

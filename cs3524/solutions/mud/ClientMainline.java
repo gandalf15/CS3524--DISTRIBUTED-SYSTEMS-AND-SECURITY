@@ -50,10 +50,8 @@ public class ClientMainline
 			String chosenServerString = null;
 			while(chosenServerString == null){
 				chosenServerString = System.console().readLine("Connect to server number: ").trim();
-				if (Integer.parseInt(chosenServerString) <= servers.size()){
-					serverStub.joinServer(servers.get(Integer.parseInt(chosenServerString)));
-				} else if (Integer.parseInt(chosenServerString) == servers.size()+1){
-					serverStub.createServer();
+				if (Integer.parseInt(chosenServerString) <= servers.size()+1){
+					serverStub.joinServer(servers.get(Integer.parseInt(chosenServerString)), clientStub);
 				} else {
 					chosenServerString = null;
 					System.out.println("Invalid choice! Try again.");
