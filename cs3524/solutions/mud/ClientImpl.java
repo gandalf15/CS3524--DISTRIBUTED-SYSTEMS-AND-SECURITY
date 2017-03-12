@@ -7,14 +7,15 @@ import java.util.ArrayList;
 public class ClientImpl implements ClientInterface {
 	private String clientUserName;
 	
-	public ClientImpl( String clientUserName ) 
+	public ClientImpl( String userName ) 
 	{
-    		clientUserName = clientUserName;
+    		clientUserName = userName;
 	}
 
   	public String getUserName() 
 	{
-    		return clientUserName;
+		String name = clientUserName;
+    	return name;
   	}
 
   	public void sendMessage(String message)

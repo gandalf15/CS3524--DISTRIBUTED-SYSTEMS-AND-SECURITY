@@ -46,6 +46,7 @@ public class MUDServerImpl implements MUDServerInterface {
 		{
 			serversMap.put(clientUserName+"'s server", new MUD("servers/void/void.edg","servers/void/void.msg","servers/void/void.thg"));
 			clientToServerMap.put( clientUserName, clientUserName+"'s server" );
+			server = serversMap.get(clientUserName+"'s server");
 			
 			clientsMap = new HashMap<String, ClientInterface>();
 			clientsMap.put( clientUserName, client ); 
@@ -55,17 +56,15 @@ public class MUDServerImpl implements MUDServerInterface {
 			
 			clientInventoryMap.put( clientUserName, new ArrayList<String>() );
 			
-			server = serversMap.get(clientUserName+"'s server");
 			server.addThing( server.startLocation(), "User: "+clientUserName );
 	
 			String message = "\n~~~Welcome to "+clientUserName+"'s Server~~~\n";
 			message += "You are currently at "+clientPositionMap.get( clientUserName )+" location\n";
 			client.sendMessage( message );
-			return true;
-	 
+			return true; 
 		}
 
-		if(serverToClientsMap.get(serverName).size() > maxPlayers)
+		if(serverToClientsMap.get(serverName).size() >= maxPlayers)
 		{
 			client.sendMessage( "Sorry maximum players reached. Try later or join another server" );
 			return false;
@@ -111,15 +110,42 @@ public class MUDServerImpl implements MUDServerInterface {
 			return false; 
 		}
 		
+		if ( serverName.equals( clientUserName+"'s server" ) )
+		{
+			serversMap.remove( clientUserName+"'s server" );
+			serverToClientsMap.remove( clientUserName+"'s server" );
+		} 
+		else 
+		{	
+			server.delThing( position  ,"User: "+clientUserName );
+			serversMap.put( serverName, server);
+			clientsMap.remove( clientUserName );
+			serverToClientsMap.put( serverName, clientsMap );
+		}
+		
 		client.sendMessage( "BB see you soon!" );
-		server.delThing( position  ,"User: "+clientUserName );
 		clientToServerMap.remove( clientUserName );
-		clientsMap.remove( clientUserName );
-		serverToClientsMap.put( serverName, clientsMap );
 		clientInventoryMap.remove( clientUserName );
 		clientPositionMap.remove( clientUserName );	
 		return true;
 				
+	}
+	
+	public boolean view(String clientUserName, String way) throws RemoteException
+	{
+		String serverName = clientToServerMap.get( clientUserName );
+		MUD server = serversMap.get( serverName );
+		HashMap<String, ClientInterface> clientsMap = serverToClientsMap.get( serverName );
+		ClientInterface client = clientsMap.get( clientUserName );
+		String origin = clientPositionMap.get( clientUserName );
+		if ( way == "C" ) 
+		{
+			
+			
+		}
+		client.sendMessage( "Yo" );
+		return true;
+		
 	}
 	
 	public boolean moveUser(String clientUserName, String position) throws RemoteException
@@ -161,6 +187,45 @@ public class MUDServerImpl implements MUDServerInterface {
 		client.sendMessage( "You have: "+inventory.toString() );
 		return false;
 					
+	}
+	
+	public boolean showInventory( String clientUserName ) throws RemoteException
+	{
+		String serverName = clientToServerMap.get( clientUserName );
+		MUD server = serversMap.get( serverName );
+		HashMap<String, ClientInterface> clientsMap = serverToClientsMap.get( serverName );
+		ClientInterface client = clientsMap.get( clientUserName );
+		String origin = clientPositionMap.get( clientUserName );
+		
+		client.sendMessage( "You moved" );
+		return true;
+		
+	}
+	
+	public boolean listUsers( String clientUserName ) throws RemoteException
+	{
+		String serverName = clientToServerMap.get( clientUserName );
+		MUD server = serversMap.get( serverName );
+		HashMap<String, ClientInterface> clientsMap = serverToClientsMap.get( serverName );
+		ClientInterface client = clientsMap.get( clientUserName );
+		String origin = clientPositionMap.get( clientUserName );
+		
+		client.sendMessage( "You moved" );
+		return true;
+		
+	}
+	
+	public boolean message( String clientUserName, String to, String message ) throws RemoteException
+	{
+		String serverName = clientToServerMap.get( clientUserName );
+		MUD server = serversMap.get( serverName );
+		HashMap<String, ClientInterface> clientsMap = serverToClientsMap.get( serverName );
+		ClientInterface client = clientsMap.get( clientUserName );
+		String origin = clientPositionMap.get( clientUserName );
+		
+		client.sendMessage( "You moved" );
+		return true;
+		
 	}
 	
 }
