@@ -27,11 +27,10 @@ public class ClientMainline
 			System.setProperty( "java.security.policy", "mud.policy" ) ;
 			System.setSecurityManager( new SecurityManager() ) ;
 
-			System.out.println("Your name: ");
-			String userName = System.console().readLine("Connect to server number: ").trim();
+			String clientUserName = System.console().readLine("Your name: ").trim();
 
 
-			ClientImpl newClient = new ClientImpl(userName);
+			ClientImpl newClient = new ClientImpl( clientUserName );
 			ClientInterface clientStub = (ClientInterface)UnicastRemoteObject.exportObject( newClient, callbackport );
 
 			String regURL = "rmi://" + hostname + ":" + registryport + "/MUDServer";
@@ -41,10 +40,11 @@ public class ClientMainline
 			Integer i = 1;
 			for(String srv : servers){
 				System.out.println("("+i+") "+srv);
-				i += 1;
 				if (servers.size() == i){
+					++i;
 					System.out.println("("+i+") Create own server");
 				}		
+				++i;
 			}
 
 			String chosenServerString = null;

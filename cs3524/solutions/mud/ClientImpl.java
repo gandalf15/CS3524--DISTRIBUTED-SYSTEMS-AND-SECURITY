@@ -17,7 +17,7 @@ public class ClientImpl implements ClientInterface {
     		return clientUserName;
   	}
 
-  	public void message(String message)
+  	public void sendMessage(String message)
 	{
     		System.out.println(message);
 
