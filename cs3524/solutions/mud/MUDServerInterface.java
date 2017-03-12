@@ -12,10 +12,11 @@ public interface MUDServerInterface extends Remote
 {
     
 	public List<String> listServers() throws RemoteException;
-	public Boolean joinServer(String serverName) throws RemoteException;
-	public Boolean leaveServer(ClientInterface client) throws RemoteException;
-	public String createServer() throws RemoteException;
-   	public List<String> listUsers() throws RemoteException;
-	public Boolean movePlayer(ClientInterface client, String direction) throws RemoteException;
+	public Boolean joinServer( String serverName, ClientInterface client ) throws RemoteException;
+	public Boolean leaveServer( String userName, String serverName ) throws RemoteException;
+	public List<String> getAllServerUsers() throws RemoteException;
+	public String getThingsAtLocation( String userName ) throws RemoteException;
+	public Boolean moveUser( String userName, String direction ) throws RemoteException;
+	public String takeItem( String 
 	public Boolean messageTo(String fromUser, String toUser, String messageString) throws RemoteException;
 }
