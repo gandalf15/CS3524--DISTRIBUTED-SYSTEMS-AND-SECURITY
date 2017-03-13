@@ -230,6 +230,24 @@ public class MUD
 	return getVertex( loc ).toString();
 	}
 
+	//method that provides infor where a player can move
+	public String locationPaths( String loc )
+	{
+		String message = getVertex( loc )._msg + "\n";
+		for (Map.Entry<String, Edge> vertex : getVertex(loc)._routes.entrySet())
+		{
+			message += "You can move to the " + vertex.getKey() + " there is " + vertex.getValue()._view + "\n";
+		}
+		return message;
+	}
+
+	//method that provides info about things on location
+	public List locationThings( String loc )
+	{
+		List<String> things = getVertex(loc)._things;
+		return things;
+	} 
+	
 	/**
 	 * Get the start location for new MUD users.
 	 */

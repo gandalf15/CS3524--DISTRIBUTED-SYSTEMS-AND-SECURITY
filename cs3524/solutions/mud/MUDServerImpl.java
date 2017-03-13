@@ -15,7 +15,7 @@ import java.util.HashMap;
 public class MUDServerImpl implements MUDServerInterface {
 
 	private Integer maxPlayers = 2;	
-
+	private Integer maxServers = 3;
 	private Map<String, MUD> serversMap = new HashMap<String, MUD>(); 
 	private	Map<String, String> clientToServerMap = new HashMap<String, String>();
 	private	Map<String, HashMap<String, ClientInterface>> serverToClientsMap = new HashMap<String, HashMap<String, ClientInterface>>();
@@ -44,6 +44,11 @@ public class MUDServerImpl implements MUDServerInterface {
 		HashMap<String, ClientInterface> clientsMap;
 		if (server == null)
 		{
+			if ( serversMap.size() >= maxServers )
+			{
+				client.sendMessage( "Maximum number of servers reached. Try later." );
+				return false;
+			}
 			serversMap.put(clientUserName+"'s server", new MUD("servers/void/void.edg","servers/void/void.msg","servers/void/void.thg"));
 			clientToServerMap.put( clientUserName, clientUserName+"'s server" );
 			server = serversMap.get(clientUserName+"'s server");
@@ -131,21 +136,34 @@ public class MUDServerImpl implements MUDServerInterface {
 				
 	}
 	
-	public boolean view(String clientUserName, String way) throws RemoteException
+	public boolean view( String clientUserName, String what ) throws RemoteException
 	{
 		String serverName = clientToServerMap.get( clientUserName );
 		MUD server = serversMap.get( serverName );
 		HashMap<String, ClientInterface> clientsMap = serverToClientsMap.get( serverName );
 		ClientInterface client = clientsMap.get( clientUserName );
-		String origin = clientPositionMap.get( clientUserName );
-		if ( way == "C" ) 
+		String position = clientPositionMap.get( clientUserName );
+		String message = null;
+
+		if ( what.equals("paths") ) 
 		{
-			
-			
+			message = server.locationPaths( position );
+			client.sendMessage( message );
+			return true;			
 		}
-		client.sendMessage( "Yo" );
-		return true;
-		
+
+		if ( what.equals("things") )
+		{
+			message = "There is:\n";
+			List<String> things = server.locationThings( position );
+			for ( String t : things )
+			{
+				message += t + "\n";
+			}
+			client.sendMessage( message );
+			return true;
+		}
+		return false;
 	}
 	
 	public boolean moveUser(String clientUserName, String position) throws RemoteException
@@ -155,10 +173,17 @@ public class MUDServerImpl implements MUDServerInterface {
 		HashMap<String, ClientInterface> clientsMap = serverToClientsMap.get( serverName );
 		ClientInterface client = clientsMap.get( clientUserName );
 		String origin = clientPositionMap.get( clientUserName );
+		String message = "";
 		
-		client.sendMessage( "You moved" );
-		return true;
-		
+		message = server.moveThing( origin, position, "User: "+clientUserName );
+		clientPositionMap.put( clientUserName, message );
+		if ( message.equals( origin ) ) 
+		{
+			client.sendMessage( "You cannot move there.\n" );
+			return false;
+		}
+		client.sendMessage( "You moved to " + message + "\n");
+		return true;	
 	}
 
 
@@ -171,11 +196,11 @@ public class MUDServerImpl implements MUDServerInterface {
 		HashMap<String, ClientInterface> clientsMap = serverToClientsMap.get( serverName );
 		ClientInterface client = clientsMap.get( clientUserName );
 		ArrayList<String> inventory = clientInventoryMap.get( clientUserName );
-		String things = server.locationInfo( clientPositionMap.get( clientUserName ) );
-		String[] thingsArray = things.split("\\s+");
-		for ( String t : thingsArray )
+		List<String> things = server.locationThings( clientPositionMap.get( clientUserName ) );
+	
+		for ( String t : things )
 		{
-			if ( thing == t )
+			if ( thing.equals( t ) && !thing.contains("User:") )
 			{
 				server.delThing( clientPositionMap.get( clientUserName ), t );
 				inventory.add( t );
@@ -184,7 +209,7 @@ public class MUDServerImpl implements MUDServerInterface {
 				return true;
 			}
 		}
-		client.sendMessage( "You have: "+inventory.toString() );
+		client.sendMessage( "No!\nYou have: "+inventory.toString() );
 		return false;
 					
 	}
@@ -195,9 +220,9 @@ public class MUDServerImpl implements MUDServerInterface {
 		MUD server = serversMap.get( serverName );
 		HashMap<String, ClientInterface> clientsMap = serverToClientsMap.get( serverName );
 		ClientInterface client = clientsMap.get( clientUserName );
-		String origin = clientPositionMap.get( clientUserName );
-		
-		client.sendMessage( "You moved" );
+		List<String> inventory =  clientInventoryMap.get(clientUserName);
+		String message = "In your inventory is:\n";
+		client.sendMessage( message+inventory.toString() );
 		return true;
 		
 	}
@@ -208,11 +233,14 @@ public class MUDServerImpl implements MUDServerInterface {
 		MUD server = serversMap.get( serverName );
 		HashMap<String, ClientInterface> clientsMap = serverToClientsMap.get( serverName );
 		ClientInterface client = clientsMap.get( clientUserName );
-		String origin = clientPositionMap.get( clientUserName );
-		
-		client.sendMessage( "You moved" );
-		return true;
-		
+		String message = "\nThese users are online:\n";
+		Set<String> clientsSet = clientsMap.keySet();
+		for (String c : clientsSet )
+		{
+			message += c+"\n";
+		}
+		client.sendMessage( message );
+		return true;		
 	}
 	
 	public boolean message( String clientUserName, String to, String message ) throws RemoteException
@@ -220,12 +248,12 @@ public class MUDServerImpl implements MUDServerInterface {
 		String serverName = clientToServerMap.get( clientUserName );
 		MUD server = serversMap.get( serverName );
 		HashMap<String, ClientInterface> clientsMap = serverToClientsMap.get( serverName );
-		ClientInterface client = clientsMap.get( clientUserName );
-		String origin = clientPositionMap.get( clientUserName );
-		
-		client.sendMessage( "You moved" );
-		return true;
-		
+		ClientInterface fromClient = clientsMap.get( clientUserName );
+		ClientInterface toClient = clientsMap.get( to );
+		String formatedMessage = "Message from " + clientUserName + ":\n" + message;
+		toClient.sendMessage( formatedMessage );
+		fromClient.sendMessage( "\nMessage sent\n" );
+		return true;	
 	}
 	
 }

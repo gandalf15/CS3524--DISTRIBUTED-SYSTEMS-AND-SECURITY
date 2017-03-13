@@ -56,7 +56,9 @@ public class ClientMainline
 				chosenServerString = System.console().readLine("Connect to server number: ").trim();
 				if (Integer.parseInt(chosenServerString) <= servers.size())
 				{
-					response = serverStub.joinServer(servers.get(Integer.parseInt(chosenServerString)), clientStub);
+					Integer chosenServerInt = Integer.parseInt(chosenServerString);
+					--chosenServerInt;
+					response = serverStub.joinServer(servers.get(chosenServerInt), clientStub);
 					if ( response == false ){System.exit(0);}
 				}
 				else if (Integer.parseInt(chosenServerString) == servers.size()+1)
@@ -84,34 +86,26 @@ public class ClientMainline
 				
 				if ( userInput.equals( "view" ) )
 				{
-					System.out.println( "You can look (N)orth, (E)ast, (S)outh, (W)est\n" );
-					userInput = System.console().readLine( "Where do you want to look?\n" ).trim();
-					if ( userInput.equals("N") || userInput.equals("E") || userInput.equals("S") || userInput.equals("W") )
-					{
-						serverStub.view( clientUserName, userInput );
-						userInput = null;
-					}
-				
+					serverStub.view( clientUserName, "paths" );
+					serverStub.view( clientUserName, "things" );
 				}
 				
 				if ( userInput.equals( "move" ) )
 				{	
-					System.out.println( "You can move (N)orth, (E)ast, (S)outh, (W)est\n" );
+					System.out.println( "You can move:\n" );
+					serverStub.view( clientUserName, "paths" );
 					userInput = System.console().readLine( "Where do you want to move?\n" ).trim();
-					if ( userInput.equals("N") || userInput.equals("E") || userInput.equals("S") || userInput.equals("W") )
+					if ( userInput.equals("north") || userInput.equals("east") || userInput.equals("south") || userInput.equals("west") )
 					{
 						serverStub.moveUser( clientUserName, userInput );
-						userInput = null;
 					}
 				}
 				
 				if ( userInput.equals( "take" ) )
 				{
-					System.out.println( "You can take:\n" );
-					serverStub.view( clientUserName, "C" );
+					serverStub.view( clientUserName, "things" );
 					userInput = System.console().readLine( "What would you like to take?\n" ).trim();
 					serverStub.getThing( clientUserName, userInput );
-					userInput = null;
 				}
 				
 				if ( userInput.equals( "show inventory" ) )
@@ -122,17 +116,15 @@ public class ClientMainline
 				if ( userInput.equals( "online users" ) )
 				{
 					serverStub.listUsers( clientUserName );
-					userInput = null;
 				}
 				
 				if ( userInput.equals( "message" ) )
 				{
 					System.out.println( "You can message to:\n" );
 					serverStub.listUsers( clientUserName );
-					String to = System.console().readLine( "Now write the name:\n" ).trim();
-					String message = System.console().readLine( "Now write the message:\n" ).trim();
+					String to = System.console().readLine( "Write the name:\n" ).trim();
+					String message = System.console().readLine( "Write the message:\n" ).trim();
 					serverStub.message(clientUserName, to, message );
-					userInput = null;
 				}
 				
 				if ( userInput.equals( "exit" ) )
