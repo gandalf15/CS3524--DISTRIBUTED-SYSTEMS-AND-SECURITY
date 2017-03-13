@@ -1,0 +1,67 @@
+Author: Marcel Zak
+Student ID: 51442568
+Course: CS3524
+
+What I have done for every requirements
+
+CGS D:
+	Impleented all the required functionality. 
+	- user can move
+	- user gets feedback
+
+CGS C:
+	Implemented all the required functionality.
+	- user can move in any direction
+	- user can see other users
+		- either through the command 'view' which shows everything at the current users location
+		- or through the command 'online users' which shows all the online users at the MUD
+	- user can pick up thing with the command 'take'
+
+CGS B:
+	Implemented all the required functionality.
+	- there are two MUDs running 'Pathos' and 'Hades'
+	- when the user is connected he can choose the server
+
+CGS A5:
+	Implemented all the required functionality.
+	- User can create own MUD at run time. It is the last option in the menu.
+	- In MUDServerImpl there are  two variables maxUsers and maxServers which restricts MUDs and total number of users logged on to MUDs
+
+CGS A4 - A1:
+	Implemented this functionality:
+	- clients joining / leaving games.
+	- every client can create its own MUD unless the maxServers is reached.
+	- client messaging service
+	- client must have unique name
+	- help commands which shows how to play
+
+These commands can be used:
+	- help - show all the command which can be used
+	- view - view all the things around you
+	- move - move to some location
+	- take - take some item
+	- online users - show all the online user at the MUD
+	- show inventory - show your inventory
+	- exit - quit the MUD
+
+How to run the game:
+	First compile the files. There is Makefile. Run these commands:
+		- 'make assessment'
+
+	If you have gnome-terminal you can run shell script start.sh which automatically runs terminals with these commands:
+		- rmiregistry 50010
+		- java cs3524.solutions.mud.MUDServerMainline 50010 50011
+		- java cs3524.solutions.mud.ClientMainline 50010 50012
+		- java cs3524.solutions.mud.ClientMainline 50010 50013
+		- java cs3524.solutions.mud.ClientMainline 50010 50014
+	Warning these terminals close immediatelly after the server disconnects the client. So you won't have time to read messages.
+	This was done mainly for my convinience.
+	
+	If you want to run it manually then you need to open terminals and copy and paste those commands. 
+	Then you will be able to rad the reasons why the client was disconnected.
+
+	Current maxUsers = 2 per MUD and maxServers = 3.
+
+	I mainly used HashMap for better lookup time and I keep all the entries at server side.
+	So thet client cannot manipulate with anything.
+	Every method has comments what it does.
