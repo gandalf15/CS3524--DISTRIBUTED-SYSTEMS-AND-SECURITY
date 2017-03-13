@@ -1,7 +1,0 @@
-	private Map<String, MUD> serversMap = new HashMap<String, MUD>(); 
-	private	Map<String, String> clientToServerMap = new HashMap<String, String>();
-	private	Map<String, Map<String, ClientInterface>> serverToClientsMap = new HashMap<String, HashMap<String, ClientInterface>>();
-	private Map<String, List<String>> clientInventoryMap = new HashMap<String, ArrayList<String>>;
-	private Map<String, String> clientPositionMap = new HashMap<String, String>(); 
-
-

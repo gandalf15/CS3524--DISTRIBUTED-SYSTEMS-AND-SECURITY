@@ -1,0 +1,3067 @@
+%!PS-Adobe-3.0
+%%Title: ClientImpl.java, ClientInterface.java, ClientMainline.java, Edge.java, MUD.java, MUDServerImpl.java, MUDServerInterface.java, MUDServerMainline.java, Vertex.java
+%%For: marcel
+%%Creator: a2ps version 4.14
+%%CreationDate: Mon Mar 13 10:49:26 2017
+%%BoundingBox: 24 24 571 818
+%%DocumentData: Clean7Bit
+%%Orientation: Landscape
+%%Pages: 14
+%%PageOrder: Ascend
+%%DocumentMedia: A4 595 842 0 () ()
+%%DocumentNeededResources: font Courier
+%%+ font Courier-Bold
+%%+ font Helvetica
+%%+ font Helvetica-Bold
+%%+ font Symbol
+%%+ font Times-Bold
+%%+ font Times-Roman
+%%DocumentProcessColors: Black Blue Green Red 
+%%DocumentSuppliedResources: procset a2ps-color-prolog
+%%+ encoding ISO-8859-1Encoding
+%%EndComments
+/a2psdict 200 dict def
+a2psdict begin
+%%BeginProlog
+%%Copyright: (c) 1988, 89, 90, 91, 92, 93 Miguel Santana
+%%Copyright: (c) 1995, 96, 97, 98 Akim Demaille, Miguel Santana
+% Check PostScript language level.
+/languagelevel where {
+  pop /gs_languagelevel languagelevel def
+} {
+  /gs_languagelevel 1 def
+} ifelse
+
+% EPSF import as in the Red Book
+/BeginInclude {
+  /b4_Inc_state save def    		% Save state for cleanup
+  /dict_count countdictstack def	% Count objects on dict stack
+  /op_count count 1 sub def		% Count objects on operand stack 
+  userdict begin
+    0 setgray 0 setlinecap
+    1 setlinewidth 0 setlinejoin
+    10 setmiterlimit [ ] 0 setdash newpath
+    gs_languagelevel 1 ne {
+      false setstrokeadjust false setoverprint 
+    } if
+} bind def
+
+/EndInclude {
+  count op_count sub { pos } repeat	% Clean up stacks
+  countdictstack dict_count sub { end } repeat
+  b4_Inc_state restore
+} bind def
+
+/BeginEPSF {
+  BeginInclude
+  /showpage { } def
+} bind def
+
+/EndEPSF {
+  EndInclude
+} bind def
+
+% Page prefeed
+/page_prefeed {         % bool -> -
+  statusdict /prefeed known {
+    statusdict exch /prefeed exch put
+  } {
+    pop
+  } ifelse
+} bind def
+
+/deffont {
+  findfont exch scalefont def
+} bind def
+
+/reencode_font {
+  findfont reencode 2 copy definefont pop def
+} bind def
+
+% Function c-show (str => -)
+% centers text only according to x axis.
+/c-show { 
+  dup stringwidth pop
+  2 div neg 0 rmoveto
+  show
+} bind def
+
+% Function l-show (str => -)
+% prints texts so that it ends at currentpoint
+/l-show {
+  dup stringwidth pop neg 
+  0 
+  rmoveto show
+} bind def
+
+% center-fit show (str w => -)
+% show centered, and scale currentfont so that the width is less than w
+/cfshow {
+  exch dup stringwidth pop
+  % If the title is too big, try to make it smaller
+  3 2 roll 2 copy
+  gt
+  { % if, i.e. too big
+    exch div
+    currentfont exch scalefont setfont
+  } { % ifelse
+    pop pop 
+  }
+  ifelse
+  c-show			% center title
+} bind def
+
+% Return the y size of the current font
+% - => fontsize
+/currentfontsize {
+  currentfont /FontType get 0 eq {
+    currentfont /FontMatrix get 3 get
+  }{
+    currentfont /FontMatrix get 3 get 1000 mul
+  } ifelse
+} bind def
+
+% reencode the font
+% <encoding-vector> <fontdict> -> <newfontdict>
+/reencode { %def
+  dup length 5 add dict begin
+    { %forall
+      % <vector> <key> <val>
+      1 index /FID ne 
+      { def }{ pop pop } ifelse
+    } forall
+    /Encoding exch def % -
+
+    % Use the font's bounding box to determine the ascent, descent,
+    % and overall height; don't forget that these values have to be
+    % transformed using the font's matrix.
+    % We use `load' because sometimes BBox is executable, sometimes not.
+    % Since we need 4 numbers an not an array avoid BBox from being executed
+    /FontBBox load aload pop
+    FontMatrix transform /Ascent exch def pop
+    FontMatrix transform /Descent exch def pop
+    /FontHeight Ascent Descent sub def
+
+    % Get the underline position and thickness if they're defined.
+    % Use 1 if they are not defined.
+    currentdict /FontInfo 2 copy known
+    { get
+      /UnderlinePosition 2 copy % <FontInfo> /UP <FontInfo> /UP
+      2 copy known
+      { get }{ pop pop 1 } ifelse
+      0 exch FontMatrix transform exch pop
+      def % <FontInfo>
+
+      /UnderlineThickness 2 copy % <FontInfo> /UT <FontInfo> /UT
+      2 copy known
+      { get }{ pop pop 1 } ifelse
+      0 exch FontMatrix transform exch pop
+      def % <FontInfo>
+      pop % -
+    }{ pop pop
+    } ifelse
+
+    currentdict
+  end 
+} bind def
+
+% composite fonts for ASCII-EUC mixed strings
+% Version 1.2 1/31/1990
+% Original Ken'ichi HANDA (handa@etl.go.jp)
+% Modified Norio Katayama (katayama@rd.nacsis.ac.jp),1998
+% Extend & Fix Koji Nakamaru (maru@on.cs.keio.ac.jp), 1999
+% Anyone can freely copy, modify, distribute this program.
+
+/copyfont {	% font-dic extra-entry-count  copyfont  font-dic
+	1 index maxlength add dict begin
+	{	1 index /FID ne 2 index /UniqueID ne and
+		{def} {pop pop} ifelse
+	} forall
+	currentdict
+	end
+} bind def
+
+/compositefont { % ASCIIFontName EUCFontName RomanScale RomanOffset Rot(T/F) compositefont font
+    /RomanRotation exch def
+    /RomanOffset exch def
+    /RomanScale exch def
+    userdict /fixeucfont_dict known not {
+	userdict begin
+	    /fixeucfont_dict 2 dict begin
+		/UpperByteEncoding [
+		    16#00 1 16#20 { pop 0 } for
+		    16#21 1 16#28 { 16#20 sub } for
+		    16#29 1 16#2F { pop 0 } for
+		    16#30 1 16#74 { 16#27 sub } for
+		    16#75 1 16#FF { pop 0 } for
+		] def
+	        /LowerByteEncoding [
+		    16#00 1 16#A0 { pop /.notdef } for
+		    16#A1 1 16#FE { 16#80 sub 16 2 string cvrs
+				    (cXX) dup 1 4 -1 roll
+				    putinterval cvn } for
+		    /.notdef
+		] def
+		currentdict
+	    end def
+	end
+    } if
+    findfont dup /FontType get 0 eq {
+	14 dict begin
+	    %
+	    % 7+8 bit EUC font
+	    %
+	    12 dict begin
+		/EUCFont exch def
+		/FontInfo (7+8 bit EUC font) readonly def
+		/PaintType 0 def
+		/FontType 0 def
+		/FontMatrix matrix def
+		% /FontName
+		/Encoding fixeucfont_dict /UpperByteEncoding get def
+		/FMapType 2 def
+		EUCFont /WMode known
+		{ EUCFont /WMode get /WMode exch def }
+		{ /WMode 0 def } ifelse
+		/FDepVector [
+		    EUCFont /FDepVector get 0 get
+		    [ 16#21 1 16#28 {} for 16#30 1 16#74 {} for ]
+		    {
+			13 dict begin
+			    /EUCFont EUCFont def
+			    /UpperByte exch 16#80 add def	
+			    % /FontName
+			    /FontInfo (EUC lower byte font) readonly def
+			    /PaintType 0 def
+			    /FontType 3 def
+			    /FontMatrix matrix def
+			    /FontBBox {0 0 0 0} def
+			    /Encoding
+				fixeucfont_dict /LowerByteEncoding get def
+			    % /UniqueID
+			    % /WMode
+			    /BuildChar {
+				gsave
+				exch dup /EUCFont get setfont
+				/UpperByte get
+				2 string
+				dup 0 4 -1 roll put
+				dup 1 4 -1 roll put
+				dup stringwidth setcharwidth
+				0 0 moveto show
+				grestore
+			    } bind def
+			    currentdict
+			end
+			/lowerbytefont exch definefont
+		    } forall
+		] def
+		currentdict
+	    end
+	    /eucfont exch definefont
+	    exch
+	    findfont 1 copyfont dup begin
+		RomanRotation {
+			/FontMatrix FontMatrix
+			[ 0 RomanScale neg RomanScale 0 RomanOffset neg 0 ]
+			matrix concatmatrix def
+		}{
+			/FontMatrix FontMatrix
+			[ RomanScale 0 0 RomanScale 0 RomanOffset ] matrix concatmatrix
+			def
+			/CDevProc
+			    {pop pop pop pop 0 exch -1000 exch 2 div 880} def
+		} ifelse
+	    end
+	    /asciifont exch definefont
+	    exch
+	    /FDepVector [ 4 2 roll ] def
+	    /FontType 0 def
+	    /WMode 0 def
+	    /FMapType 4 def
+	    /FontMatrix matrix def
+	    /Encoding [0 1] def
+	    /FontBBox {0 0 0 0} def
+%	    /FontHeight 1.0 def % XXXX
+	    /FontHeight RomanScale 1.0 ge { RomanScale }{ 1.0 } ifelse def
+	    /Descent -0.3 def   % XXXX
+	    currentdict
+	end
+	/tmpfont exch definefont
+	pop
+	/tmpfont findfont
+    }{
+	pop findfont 0 copyfont
+    } ifelse
+} def	
+
+/slantfont {	% FontName slant-degree  slantfont  font'
+    exch findfont 1 copyfont begin
+    [ 1 0 4 -1 roll 1 0 0 ] FontMatrix exch matrix concatmatrix
+    /FontMatrix exch def
+    currentdict
+    end
+} def
+
+% Function print line number (<string> # -)
+/# {
+  gsave
+    sx cw mul neg 2 div 0 rmoveto
+    f# setfont
+    c-show
+  grestore
+} bind def
+
+% -------- Some routines to enlight plain b/w printings ---------
+
+% Underline
+% width --
+/dounderline {
+  currentpoint
+  gsave
+    moveto
+    0 currentfont /Descent get currentfontsize mul rmoveto
+    0 rlineto
+    stroke
+  grestore
+} bind def
+
+% Underline a string
+% string --
+/dounderlinestring {
+  stringwidth pop
+  dounderline
+} bind def
+
+/UL {
+  /ul exch store
+} bind def
+
+% Draw a box of WIDTH wrt current font
+% width --
+/dobox {
+  currentpoint
+  gsave
+    newpath
+    moveto
+    0 currentfont /Descent get currentfontsize mul rmoveto
+    dup 0 rlineto
+    0 currentfont /FontHeight get currentfontsize mul rlineto
+    neg 0 rlineto
+    closepath
+    stroke
+  grestore
+} bind def
+
+/BX {
+  /bx exch store
+} bind def
+
+% Box a string
+% string --
+/doboxstring {
+  stringwidth pop
+  dobox
+} bind def
+
+%
+% ------------- Color routines ---------------
+%
+/FG /setrgbcolor load def
+
+% Draw the background
+% width --
+/dobackground {
+  currentpoint
+  gsave
+    newpath
+    moveto
+    0 currentfont /Descent get currentfontsize mul rmoveto
+    dup 0 rlineto
+    0 currentfont /FontHeight get currentfontsize mul rlineto
+    neg 0 rlineto
+    closepath
+    bgcolor aload pop setrgbcolor
+    fill
+  grestore
+} bind def
+
+% Draw bg for a string
+% string --
+/dobackgroundstring {
+  stringwidth pop
+  dobackground
+} bind def
+
+
+/BG {
+  dup /bg exch store
+  { mark 4 1 roll ] /bgcolor exch store } if
+} bind def
+
+
+/Show {
+  bg { dup dobackgroundstring } if
+  ul { dup dounderlinestring } if
+  bx { dup doboxstring } if
+  show
+} bind def
+
+% Function T(ab), jumps to the n-th tabulation in the current line
+/T {
+  cw mul x0 add
+  bg { dup currentpoint pop sub dobackground } if
+  ul { dup currentpoint pop sub dounderline } if
+  bx { dup currentpoint pop sub dobox } if
+  y0 moveto
+} bind def
+
+% Function n: move to the next line
+/n {
+  /y0 y0 bfs sub store
+  x0 y0 moveto
+} bind def
+
+% Function N: show and move to the next line
+/N {
+  Show
+  /y0 y0 bfs sub store
+  x0 y0 moveto
+} bind def
+
+/S {
+  Show
+} bind def
+
+%%Copyright: (c) 1988, 89, 90, 91, 92, 93 Miguel Santana
+%%Copyright: (c) 1995, 96, 97, 98 Akim Demaille, Miguel Santana
+% Function title: prints page header.
+% <ct> <rt> <lt> are passed as argument
+/title { 
+  % 1. Draw the background
+  x v get y v get moveto
+  0 setgray
+  gsave
+    0 th 2 div neg rmoveto 
+    th setlinewidth
+    0.5 0.5 1 setrgbcolor
+    pw 0 rlineto stroke
+  grestore
+  % 2. Border it
+  gsave
+    0.7 setlinewidth
+    pw 0 rlineto
+    0 th neg rlineto
+    pw neg 0 rlineto
+    closepath stroke
+  grestore
+  % stk: ct rt lt
+  x v get y v get th sub 1 add moveto
+%%IncludeResource: font Helvetica
+  fHelvetica fnfs 0.8 mul scalefont setfont
+  % 3. The left title
+  gsave
+    dup stringwidth pop fnfs 0.8 mul add exch % leave space took on stack
+    fnfs 0.8 mul hm rmoveto
+    show			% left title
+  grestore
+  exch
+  % stk: ct ltw rt
+  % 4. the right title
+  gsave
+    dup stringwidth pop fnfs 0.8 mul add exch % leave space took on stack
+    dup
+    pw exch stringwidth pop fnfs 0.8 mul add sub
+    hm
+    rmoveto
+    show			% right title
+  grestore
+  % stk: ct ltw rtw
+  % 5. the center title
+  gsave
+    pw 3 1 roll
+    % stk: ct pw ltw rtw
+    3 copy 
+    % Move to the center of the left room
+    sub add 2 div hm rmoveto
+    % What is the available space in here?
+    add sub fnfs 0.8 mul sub fnfs 0.8 mul sub
+    % stk: ct space_left
+%%IncludeResource: font Helvetica-Bold
+  fHelvetica-Bold fnfs scalefont setfont
+    1 setgray
+    cfshow
+  grestore
+} bind def
+
+% Function border: prints virtual page border
+/border { %def
+  gsave				% print four sides
+    0 setgray
+    x v get y v get moveto
+    0.7 setlinewidth		% of the square
+    pw 0 rlineto
+    0 ph neg rlineto
+    pw neg 0 rlineto
+    closepath stroke
+  grestore
+} bind def
+
+% Function water: prints a water mark in background
+/water { %def
+  gsave
+    scx scy moveto rotate
+%%IncludeResource: font Times-Bold
+  fTimes-Bold 100 scalefont setfont
+    .97 setgray
+    dup stringwidth pop 2 div neg -50 rmoveto
+    show
+  grestore
+} bind def
+
+% Function rhead: prints the right header
+/rhead {  %def
+  lx ly moveto
+  fHelvetica fnfs 0.8 mul scalefont setfont
+  l-show
+} bind def
+
+% Function footer (cf rf lf -> -)
+/footer {
+  fHelvetica fnfs 0.8 mul scalefont setfont
+  dx dy moveto
+  show
+
+  snx sny moveto
+  l-show
+  
+  fnx fny moveto
+  c-show
+} bind def
+
+% Function print line number (<string> # -)
+/# {
+  gsave
+    sx cw mul neg 2 div 0 rmoveto
+    f# setfont
+    c-show
+  grestore
+} bind def
+%%BeginResource: procset a2ps-color-prolog 2.0 1
+
+%% Definition of the color faces.
+/p {
+  0 0 0 FG
+  false BG
+  false UL
+  false BX
+  fCourier bfs scalefont setfont
+  Show
+} bind def
+
+/sy {
+  0 0 0 FG
+  false BG
+  fSymbol bfs scalefont setfont
+  Show
+} bind def
+
+/k {
+  false BG
+  false UL
+  false BX
+  0 0 0.9 FG
+  fCourier bfs scalefont setfont
+  Show
+} bind def
+
+/K {
+  false BG
+  false UL
+  false BX
+  0 0 0.8 FG
+  fCourier-Bold bfs scalefont setfont
+  Show
+} bind def
+
+/c {
+  false BG
+  false UL
+  false BX
+  0.8 0 0 FG
+  fCourier bfs scalefont setfont
+  Show
+} bind def
+
+/C {
+  false BG
+  false UL
+  false BX
+  0.8 0 0 FG
+  fCourier-Bold bfs scalefont setfont
+  Show
+} bind def
+
+/l {
+  0 0 0 FG
+  0.8 0.8 0 true BG
+  false UL
+  false BX
+  fCourier bfs scalefont setfont
+  Show
+} bind def
+
+/L {
+  0 0 0 FG
+  1 1 0 true BG
+  false UL
+  false BX
+  fCourier-Bold bfs scalefont setfont
+  Show
+} bind def
+
+/str {
+  false BG
+  false UL
+  false BX
+  0 0.5 0 FG
+  fTimes-Roman bfs scalefont setfont
+  Show
+} bind def
+
+/e{
+  1 0 0 true BG
+  false UL
+  true BX
+  1 1 1 FG
+  fHelvetica-Bold bfs scalefont setfont
+  Show
+} bind def
+
+% Function print line number (<string> # -)
+/# {
+  gsave
+    sx cw mul 2 div neg 0 rmoveto
+    f# setfont
+    0.8 0.1 0.1 FG
+    c-show
+  grestore
+} bind def
+%%EndResource
+%%EndProlog
+%%BeginSetup
+%%IncludeResource: font Courier
+%%IncludeResource: font Courier-Bold
+%%IncludeResource: font Times-Roman
+%%IncludeResource: font Symbol
+%%BeginResource: encoding ISO-8859-1Encoding
+/ISO-8859-1Encoding [
+/.notdef /.notdef /.notdef /.notdef /.notdef /.notdef /.notdef /.notdef 
+/.notdef /.notdef /.notdef /.notdef /.notdef /.notdef /.notdef /.notdef 
+/.notdef /.notdef /.notdef /.notdef /.notdef /.notdef /.notdef /.notdef 
+/.notdef /.notdef /.notdef /.notdef /.notdef /.notdef /.notdef /.notdef 
+/space /exclam /quotedbl /numbersign /dollar /percent /ampersand /quoteright 
+/parenleft /parenright /asterisk /plus /comma /minus /period /slash 
+/zero /one /two /three /four /five /six /seven 
+/eight /nine /colon /semicolon /less /equal /greater /question 
+/at /A /B /C /D /E /F /G 
+/H /I /J /K /L /M /N /O 
+/P /Q /R /S /T /U /V /W 
+/X /Y /Z /bracketleft /backslash /bracketright /asciicircum /underscore 
+/quoteleft /a /b /c /d /e /f /g 
+/h /i /j /k /l /m /n /o 
+/p /q /r /s /t /u /v /w 
+/x /y /z /braceleft /bar /braceright /asciitilde /.notdef 
+/.notdef /.notdef /.notdef /.notdef /.notdef /.notdef /.notdef /.notdef 
+/.notdef /.notdef /.notdef /.notdef /.notdef /.notdef /.notdef /.notdef 
+/.notdef /.notdef /.notdef /.notdef /.notdef /.notdef /.notdef /.notdef 
+/.notdef /.notdef /.notdef /.notdef /.notdef /.notdef /.notdef /.notdef 
+/space /exclamdown /cent /sterling /currency /yen /brokenbar /section 
+/dieresis /copyright /ordfeminine /guillemotleft /logicalnot /hyphen /registered /macron 
+/degree /plusminus /twosuperior /threesuperior /acute /mu /paragraph /bullet 
+/cedilla /onesuperior /ordmasculine /guillemotright /onequarter /onehalf /threequarters /questiondown 
+/Agrave /Aacute /Acircumflex /Atilde /Adieresis /Aring /AE /Ccedilla 
+/Egrave /Eacute /Ecircumflex /Edieresis /Igrave /Iacute /Icircumflex /Idieresis 
+/Eth /Ntilde /Ograve /Oacute /Ocircumflex /Otilde /Odieresis /multiply 
+/Oslash /Ugrave /Uacute /Ucircumflex /Udieresis /Yacute /Thorn /germandbls 
+/agrave /aacute /acircumflex /atilde /adieresis /aring /ae /ccedilla 
+/egrave /eacute /ecircumflex /edieresis /igrave /iacute /icircumflex /idieresis 
+/eth /ntilde /ograve /oacute /ocircumflex /otilde /odieresis /divide 
+/oslash /ugrave /uacute /ucircumflex /udieresis /yacute /thorn /ydieresis 
+] def
+%%EndResource
+% Initialize page description variables.
+/sh 595 def
+/sw 842 def
+/llx 24 def
+/urx 818 def
+/ury 571 def
+/lly 24 def
+/#copies 1 def
+/th 15.000000 def
+/fnfs 11 def
+/bfs 8.005733 def
+/cw 4.803440 def
+
+% Dictionary for ISO-8859-1 support
+/iso1dict 6 dict begin
+  /fCourier ISO-8859-1Encoding /Courier reencode_font
+  /fCourier-Bold ISO-8859-1Encoding /Courier-Bold reencode_font
+  /fHelvetica ISO-8859-1Encoding /Helvetica reencode_font
+  /fHelvetica-Bold ISO-8859-1Encoding /Helvetica-Bold reencode_font
+  /fTimes-Bold ISO-8859-1Encoding /Times-Bold reencode_font
+  /fTimes-Roman ISO-8859-1Encoding /Times-Roman reencode_font
+currentdict end def
+/bgcolor [ 0 0 0 ] def
+/bg false def
+/ul false def
+/bx false def
+% The font for line numbering
+/f# /Helvetica findfont bfs .6 mul scalefont def
+/fSymbol /Symbol findfont def
+/hm fnfs 0.25 mul def
+/pw
+   cw 81.400000 mul
+def
+/ph
+   501.959430 th add
+def
+/pmw urx llx sub pw 2 mul sub 1 div def
+/pmh 0 def
+/v 0 def
+/x [
+  0
+  dup pmw add pw add
+] def
+/y [
+  pmh ph add 0 mul ph add
+  dup
+] def
+/scx sw 2 div def
+/scy sh 2 div def
+/snx urx def
+/sny lly 2 add def
+/dx llx def
+/dy sny def
+/fnx scx def
+/fny dy def
+/lx snx def
+/ly ury fnfs 0.8 mul sub def
+/sx 0 def
+/tab 8 def
+/x0 0 def
+/y0 0 def
+%%EndSetup
+
+%%Page: (1) 1
+%%BeginPageSetup
+/pagesave save def
+sh 0 translate 90 rotate
+%%EndPageSetup
+iso1dict begin
+gsave
+llx lly 12 add translate
+/v 0 store
+/x0 x v get 3.362408 add sx cw mul add store
+/y0 y v get bfs th add sub store
+x0 y0 moveto
+() p n
+(package) K
+( cs3524.solutions.mud;) p n
+() N
+(import) K
+( java.util.List;) p n
+(import) K
+( java.util.ArrayList;) p n
+() N
+(public) K
+( ) p
+(class) K
+( ) p
+(ClientImpl) L
+( ) p
+(implements) K
+( ClientInterface {) p n
+() S 8 T () S
+(private) K
+( String clientUserName;) p n
+() S 8 T () N
+() S 8 T () S
+(public) K
+( ClientImpl\( String userName \) ) p n
+() S 8 T ({) N
+(    ) S 8 T () S 16 T (clientUserName = userName;) N
+() S 8 T (}) N
+() N
+(  ) S 8 T () S
+(public) K
+( String getUserName\(\) ) p n
+() S 8 T ({) N
+() S 8 T () S 16 T (String name = clientUserName;) N
+() S 8 T (    ) S 16 T () S
+(return) K
+( name;) p n
+(  ) S 8 T (}) N
+() N
+(  ) S 8 T () S
+(public) K
+( ) p
+(void) k
+( sendMessage\(String message\)) p n
+() S 8 T ({) N
+(    ) S 8 T () S 16 T (System.out.println\(message\);) N
+() N
+(  ) S 8 T (}) N
+(}) N
+(ClientImpl.java) (Page 1/1) (Mar 13, 17 10:03) title
+border
+grestore
+(Printed by marcel) rhead
+(ClientImpl.java) (1/14) (Monday March 13, 2017) footer
+end % of iso1dict
+pagesave restore
+showpage
+%%Page: (1) 2
+%%BeginPageSetup
+/pagesave save def
+sh 0 translate 90 rotate
+%%EndPageSetup
+iso1dict begin
+gsave
+llx lly 12 add translate
+/v 0 store
+/x0 x v get 3.362408 add sx cw mul add store
+/y0 y v get bfs th add sub store
+x0 y0 moveto
+(package) K
+( cs3524.solutions.mud;) p n
+() N
+(import) K
+( java.util.List;) p n
+(import) K
+( java.rmi.Remote;) p n
+(import) K
+( java.rmi.RemoteException;) p n
+() N
+(public) K
+( ) p
+(interface) K
+( ) p
+(ClientInterface) L
+( ) p
+(extends) K
+( Remote ) p n
+({) N
+() S 8 T () S
+(public) K
+( String getUserName\(\) ) p
+(throws) K
+( RemoteException;) p n
+() S 8 T () S
+(public) K
+( ) p
+(void) k
+( sendMessage\( String message \) ) p
+(throws) K
+( RemoteException;) p n
+() S 8 T () N
+(}) N
+(ClientInterface.java) (Page 1/1) (Mar 13, 17 10:04) title
+border
+grestore
+(Printed by marcel) rhead
+(ClientInterface.java) (2/14) (Monday March 13, 2017) footer
+end % of iso1dict
+pagesave restore
+showpage
+%%Page: (1-2) 3
+%%BeginPageSetup
+/pagesave save def
+sh 0 translate 90 rotate
+%%EndPageSetup
+iso1dict begin
+gsave
+llx lly 12 add translate
+/v 0 store
+/x0 x v get 3.362408 add sx cw mul add store
+/y0 y v get bfs th add sub store
+x0 y0 moveto
+(package) K
+( cs3524.solutions.mud;) p n
+() N
+(import) K
+( java.rmi.Naming;) p n
+(import) K
+( java.lang.SecurityManager;) p n
+(import) K
+( java.rmi.server.UnicastRemoteObject;) p n
+(import) K
+( java.util.List;) p n
+(import) K
+( java.util.Scanner;) p n
+(/**) C n
+( * Author: Marcel Zak) N
+( * version 0.0) N
+( */) N
+() p n
+(public) K
+( ) p
+(class) K
+( ) p
+(ClientMainline) L n
+({) p n
+() S 8 T () S 16 T () S
+(public) K
+( ) p
+(static) K
+( ) p
+(void) k
+( main\(String args[]\)) p n
+() S 8 T () S 16 T ({) N
+() S 8 T () S 16 T () S
+(if) K
+( \(args.length < 3\) {) p n
+() S 8 T () S 16 T () S 24 T (System.err.println\( ") S
+(Usage:\\njava ClientMainline <registryhost> <registr) str n
+(yport> <callbackport>) S
+(" \) ;) p n
+() S 8 T () S 16 T () S 24 T () S
+(return) K
+(;) p n
+() S 8 T () S 16 T (}) N
+() N
+() S 8 T () S 16 T () S
+(try) K
+( {) p n
+() S 8 T () S 16 T () S 24 T (String hostname = args[0];) N
+() S 8 T () S 16 T () S 24 T () S
+(int) k
+( registryport = Integer.parseInt\( args[1] \) ;) p n
+() S 8 T () S 16 T () S 24 T () S
+(int) k
+( callbackport = Integer.parseInt\( args[2] \) ;) p n
+() N
+() S 8 T () S 16 T () S 24 T (System.setProperty\( ") S
+(java.security.policy) str
+(", ") p
+(mud.policy) str
+(" \) ;) p n
+() S 8 T () S 16 T () S 24 T (System.setSecurityManager\( ) S
+(new) K
+( SecurityManager\(\) \) ;) p n
+() N
+() S 8 T () S 16 T () S 24 T (String clientUserName = System.console\(\).readLine\(") S
+(Your n) str n
+(ame: ) S
+("\).trim\(\);) p n
+() N
+() N
+() S 8 T () S 16 T () S 24 T (ClientImpl newClient = ) S
+(new) K
+( ClientImpl\( clientUserName \);) p n
+() S 8 T () S 16 T () S 24 T (ClientInterface clientStub = \(ClientInterface\)UnicastRem) N
+(oteObject.exportObject\( newClient, callbackport \);) N
+() N
+() S 8 T () S 16 T () S 24 T (String regURL = ") S
+(rmi://) str
+(" + hostname + ") p
+(:) str
+(" + registryport +) p n
+( ") S
+(/MUDServer) str
+(";) p n
+() S 8 T () S 16 T () S 24 T (MUDServerInterface serverStub = \(MUDServerInterface\)Nami) N
+(ng.lookup\( regURL \);) N
+() N
+() S 8 T () S 16 T () S 24 T (List<String> servers = serverStub.listServers\(\);) N
+() S 8 T () S 16 T () S 24 T (Integer i = 1;) N
+() S 8 T () S 16 T () S 24 T () S
+(for) K
+(\( String srv : servers \)) p n
+() S 8 T () S 16 T () S 24 T ({) N
+() S 8 T () S 16 T () S 24 T () S 32 T (System.out.println\(") S
+(\() str
+("+i+") p
+(\) ) str
+("+srv\);) p n
+() S 8 T () S 16 T () S 24 T () S 32 T () S
+(if) K
+( \(servers.size\(\) == i\){) p n
+() S 8 T () S 16 T () S 24 T () S 32 T () S 40 T (++i;) N
+() S 8 T () S 16 T () S 24 T () S 32 T () S 40 T (System.out.println\(") S
+(\() str
+("+i+") p
+(\) Create own server) str
+(") p n
+(\);) N
+() S 8 T () S 16 T () S 24 T () S 32 T (}) S 40 T () S 48 T () N
+() S 8 T () S 16 T () S 24 T () S 32 T (++i;) N
+() S 8 T () S 16 T () S 24 T (}) N
+() S 8 T () S 16 T () S 24 T () N
+() S 8 T () S 16 T () S 24 T () S
+(//choose a server or create your own) c n
+() p 8 T () S 16 T () S 24 T (String chosenServerString = ) S
+(null) k
+(;) p n
+() S 8 T () S 16 T () S 24 T () S
+(boolean) k
+( response = ) p
+(false) k
+(;) p n
+() S 8 T () S 16 T () S 24 T () S
+(while) K
+(\(chosenServerString == ) p
+(null) k
+(\)) p n
+() S 8 T () S 16 T () S 24 T ({) N
+() S 8 T () S 16 T () S 24 T () S 32 T (chosenServerString = System.console\(\).readLine\(") S
+() str n
+(ClientMainline.java) (Page 1/3) (Mar 13, 17 10:12) title
+border
+/v 1 store
+/x0 x v get 3.362408 add sx cw mul add store
+/y0 y v get bfs th add sub store
+x0 y0 moveto
+(Connect to server number: ) str
+("\).trim\(\);) p n
+() S 8 T () S 16 T () S 24 T () S 32 T () S
+(if) K
+( \(Integer.parseInt\(chosenServerString\) <= serv) p n
+(ers.size\(\)\)) N
+() S 8 T () S 16 T () S 24 T () S 32 T ({) S 40 T () S
+(// you have chosen one of the existing s) c n
+(ervers) N
+() p 8 T () S 16 T () S 24 T () S 32 T () S 40 T (Integer chosenServerInt = Integer.parseI) N
+(nt\(chosenServerString\);) N
+() S 8 T () S 16 T () S 24 T () S 32 T () S 40 T (--chosenServerInt;) S 64 T () S
+(//decrement the ) c n
+(value to match index) N
+() p 8 T () S 16 T () S 24 T () S 32 T () S 40 T (response = serverStub.joinServer\(servers) N
+(.get\(chosenServerInt\), clientStub\);) N
+() S 8 T () S 16 T () S 24 T () S 32 T () S 40 T () S
+(if) K
+( \( response == ) p
+(false) k
+( \){System.exit\(0\);) p n
+(}) N
+() S 8 T () S 16 T () S 24 T () S 32 T (}) N
+() S 8 T () S 16 T () S 24 T () S 32 T () S
+(else) K
+( ) p
+(if) K
+( \(Integer.parseInt\(chosenServerString\) ==) p n
+( servers.size\(\)+1\)) N
+() S 8 T () S 16 T () S 24 T () S 32 T ({) S 40 T () S
+(// you have chosen to create your own se) c n
+(rver. It is created on runtime) N
+() p 8 T () S 16 T () S 24 T () S 32 T () S 40 T (response = serverStub.joinServer\(") S
+(new) str
+(", ) p n
+(clientStub\);) N
+() S 8 T () S 16 T () S 24 T () S 32 T () S 40 T () S
+(if) K
+( \( response == ) p
+(false) k
+( \){System.exit\(0\);) p n
+(}) N
+() S 8 T () S 16 T () S 24 T () S 32 T (}) N
+() S 8 T () S 16 T () S 24 T () S 32 T () S
+(else) K
+( {) p 40 T () S
+(// invalid input) c n
+() p 8 T () S 16 T () S 24 T () S 32 T () S 40 T (chosenServerString = ) S
+(null) k
+(;) p n
+() S 8 T () S 16 T () S 24 T () S 32 T () S 40 T (System.out.println\(") S
+(Invalid choice! Try again.) str
+("\)) p n
+(;) N
+() S 8 T () S 16 T () S 24 T () S 32 T (}) N
+() S 8 T () S 16 T () S 24 T (}) N
+() S 8 T () S 16 T () S 24 T () N
+() S 8 T () S 16 T () S 24 T () S
+(//control commands) c n
+() p 8 T () S 16 T () S 24 T (System.out.println\( ") S
+(For help just type 'help') str
+(" \);) p n
+() S 8 T () S 16 T () S 24 T (String userInput;) N
+() S 8 T () S 16 T () S 24 T () S
+(while) K
+(\() p
+(true) k
+(\)) p n
+() S 8 T () S 16 T () S 24 T ({) N
+() S 8 T () S 16 T () S 24 T () S 32 T (userInput = System.console\(\).readLine\(") S
+(What do you) str n
+( want to do?\\n) S
+("\).trim\(\);) p n
+() S 8 T () S 16 T () S 24 T () S 32 T () N
+() S 8 T () S 16 T () S 24 T () S 32 T () S
+(if) K
+( \( userInput.equals\( ") p
+(help) str
+(" \) \)) p n
+() S 8 T () S 16 T () S 24 T () S 32 T ({) S 40 T () S
+(// help prints all the options) c n
+() p 8 T () S 16 T () S 24 T () S 32 T () S 40 T (System.out.println\( ") S
+(\\nview \\nmove \\ntake \\nsho) str n
+(w inventory \\nonline users \\nmessage \\nexit\\n) S
+(" \);) p n
+() S 8 T () S 16 T () S 24 T () S 32 T (}) N
+() S 8 T () S 16 T () S 24 T () S 32 T () N
+() S 8 T () S 16 T () S 24 T () S 32 T () S
+(if) K
+( \( userInput.equals\( ") p
+(view) str
+(" \) \)) p n
+() S 8 T () S 16 T () S 24 T () S 32 T ({) S 40 T () S
+(//view waht you have around you) c n
+() p 8 T () S 16 T () S 24 T () S 32 T () S 40 T (serverStub.view\( clientUserName, ") S
+(paths) str
+(" ) p n
+(\);) N
+() S 8 T () S 16 T () S 24 T () S 32 T () S 40 T (serverStub.view\( clientUserName, ") S
+(things) str
+(") p n
+( \);) N
+() S 8 T () S 16 T () S 24 T () S 32 T (}) N
+() S 8 T () S 16 T () S 24 T () S 32 T () N
+() S 8 T () S 16 T () S 24 T () S 32 T () S
+(if) K
+( \( userInput.equals\( ") p
+(move) str
+(" \) \)) p n
+() S 8 T () S 16 T () S 24 T () S 32 T ({) S 40 T () S
+(// move somewhere) c n
+() p 8 T () S 16 T () S 24 T () S 32 T () S 40 T (System.out.println\( ") S
+(You can move:\\n) str
+(" \);) p n
+() S 8 T () S 16 T () S 24 T () S 32 T () S 40 T (serverStub.view\( clientUserName, ") S
+(paths) str
+(" ) p n
+(\);) N
+() S 8 T () S 16 T () S 24 T () S 32 T () S 40 T (userInput = System.console\(\).readLine\( ") S
+() str n
+(Where do you want to move?\\n) S
+(" \).trim\(\);) p n
+() S 8 T () S 16 T () S 24 T () S 32 T () S 40 T () S
+(if) K
+( \( userInput.equals\(") p
+(north) str
+("\) || userInp) p n
+(ut.equals\(") S
+(east) str
+("\) || userInput.equals\(") p
+(south) str
+("\) || userInput.equals\(") p
+(west) str
+("\) \)) p n
+() S 8 T () S 16 T () S 24 T () S 32 T () S 40 T ({) N
+(ClientMainline.java) (Page 2/3) (Mar 13, 17 10:12) title
+border
+grestore
+(Printed by marcel) rhead
+(ClientMainline.java) (3/14) (Monday March 13, 2017) footer
+end % of iso1dict
+pagesave restore
+showpage
+%%Page: (3) 4
+%%BeginPageSetup
+/pagesave save def
+sh 0 translate 90 rotate
+%%EndPageSetup
+iso1dict begin
+gsave
+llx lly 12 add translate
+/v 0 store
+/x0 x v get 3.362408 add sx cw mul add store
+/y0 y v get bfs th add sub store
+x0 y0 moveto
+() p 8 T () S 16 T () S 24 T () S 32 T () S 40 T () S 48 T (serverStub.moveUser\( clientUserN) N
+(ame, userInput \);) N
+() S 8 T () S 16 T () S 24 T () S 32 T () S 40 T (}) N
+() S 8 T () S 16 T () S 24 T () S 32 T (}) N
+() S 8 T () S 16 T () S 24 T () S 32 T () N
+() S 8 T () S 16 T () S 24 T () S 32 T () S
+(if) K
+( \( userInput.equals\( ") p
+(take) str
+(" \) \)) p n
+() S 8 T () S 16 T () S 24 T () S 32 T ({) S 40 T () S
+(// take item around you) c n
+() p 8 T () S 16 T () S 24 T () S 32 T () S 40 T (serverStub.view\( clientUserName, ") S
+(things) str
+(") p n
+( \);) N
+() S 8 T () S 16 T () S 24 T () S 32 T () S 40 T (userInput = System.console\(\).readLine\( ") S
+() str n
+(What would you like to take?\\n) S
+(" \).trim\(\);) p n
+() S 8 T () S 16 T () S 24 T () S 32 T () S 40 T (serverStub.getThing\( clientUserName, use) N
+(rInput \);) N
+() S 8 T () S 16 T () S 24 T () S 32 T (}) N
+() S 8 T () S 16 T () S 24 T () S 32 T () N
+() S 8 T () S 16 T () S 24 T () S 32 T () S
+(if) K
+( \( userInput.equals\( ") p
+(show inventory) str
+(" \) \)) p n
+() S 8 T () S 16 T () S 24 T () S 32 T ({) S 40 T () S
+(//show your items in inventory) c n
+() p 8 T () S 16 T () S 24 T () S 32 T () S 40 T (serverStub.showInventory\( clientUserName) N
+( \);) N
+() S 8 T () S 16 T () S 24 T () S 32 T (}) N
+() S 8 T () S 16 T () S 24 T () S 32 T () N
+() S 8 T () S 16 T () S 24 T () S 32 T () S
+(if) K
+( \( userInput.equals\( ") p
+(online users) str
+(" \) \)) p n
+() S 8 T () S 16 T () S 24 T () S 32 T ({) S 40 T () S
+(// show all online users on the server) c n
+() p 8 T () S 16 T () S 24 T () S 32 T () S 40 T (serverStub.listUsers\( clientUserName \);) N
+() S 8 T () S 16 T () S 24 T () S 32 T (}) N
+() S 8 T () S 16 T () S 24 T () S 32 T () N
+() S 8 T () S 16 T () S 24 T () S 32 T () S
+(if) K
+( \( userInput.equals\( ") p
+(message) str
+(" \) \)) p n
+() S 8 T () S 16 T () S 24 T () S 32 T ({) S 40 T () S
+(// send a message to online user) c n
+() p 8 T () S 16 T () S 24 T () S 32 T () S 40 T (System.out.println\( ") S
+(You can message to:\\n) str
+(" \)) p n
+(;) N
+() S 8 T () S 16 T () S 24 T () S 32 T () S 40 T (serverStub.listUsers\( clientUserName \);) N
+() S 8 T () S 16 T () S 24 T () S 32 T () S 40 T (String to = System.console\(\).readLine\( ") S
+() str n
+(Write the name:\\n) S
+(" \).trim\(\);) p n
+() S 8 T () S 16 T () S 24 T () S 32 T () S 40 T (String message = System.console\(\).readLi) N
+(ne\( ") S
+(Write the message:\\n) str
+(" \).trim\(\);) p n
+() S 8 T () S 16 T () S 24 T () S 32 T () S 40 T (serverStub.message\(clientUserName, to, m) N
+(essage \);) N
+() S 8 T () S 16 T () S 24 T () S 32 T (}) N
+() S 8 T () S 16 T () S 24 T () S 32 T () N
+() S 8 T () S 16 T () S 24 T () S 32 T () S
+(if) K
+( \( userInput.equals\( ") p
+(exit) str
+(" \) \)) p n
+() S 8 T () S 16 T () S 24 T () S 32 T ({) S 40 T () S
+(// stop the client) c n
+() p 8 T () S 16 T () S 24 T () S 32 T () S 40 T (serverStub.leaveServer\( clientUserName \)) N
+(;) N
+() S 8 T () S 16 T () S 24 T () S 32 T () S 40 T (System.exit\(0\);) N
+() S 8 T () S 16 T () S 24 T () S 32 T (}) N
+() S 8 T () S 16 T () S 24 T () S 32 T () N
+() S 8 T () S 16 T () S 24 T (}) N
+() N
+() S 8 T () S 16 T (}) N
+() S 8 T () S 16 T () S
+(catch) K
+(\(java.rmi.NotBoundException e\) {) p n
+() S 8 T () S 16 T () S 24 T (System.err.println\( ") S
+(Can't find the auctioneer in the registry.) str
+(" \);) p n
+() S 8 T () S 16 T (}) N
+() S 8 T () S 16 T () S
+(catch) K
+( \(java.io.IOException e\) {) p n
+() S 8 T () S 16 T () S 24 T (System.out.println\( ") S
+(Failed to register.) str
+(" \);) p n
+() S 8 T () S 16 T (}) N
+() S 8 T (}) N
+(}) N
+(ClientMainline.java) (Page 3/3) (Mar 13, 17 10:12) title
+border
+grestore
+(Printed by marcel) rhead
+(ClientMainline.java) (4/14) (Monday March 13, 2017) footer
+end % of iso1dict
+pagesave restore
+showpage
+%%Page: (1) 5
+%%BeginPageSetup
+/pagesave save def
+sh 0 translate 90 rotate
+%%EndPageSetup
+iso1dict begin
+gsave
+llx lly 12 add translate
+/v 0 store
+/x0 x v get 3.362408 add sx cw mul add store
+/y0 y v get bfs th add sub store
+x0 y0 moveto
+(/***********************************************************************) C n
+( * cs3524.solutions.mud.Edge) N
+( ***********************************************************************/) N
+() p n
+(package) K
+( cs3524.solutions.mud;) p n
+() N
+(// Represents an path in the MUD \(an edge in a graph\).) c n
+(class) K
+( ) p
+(Edge) L n
+({) p n
+() S 8 T () S
+(public) K
+( Vertex _dest;   ) p
+(// Your destination if you walk down this path) c n
+() p 8 T () S
+(public) K
+( String _view;   ) p
+(// What you see if you look down this path) c n
+() p 8 T () S
+(public) K
+( Edge\( Vertex d, String v \)) p n
+() S 8 T () S 16 T ({) N
+() S 8 T () S 16 T () S 24 T (_dest = d;) N
+() S 8 T () S 16 T () S 24 T (_view = v;) N
+() S 8 T () S 16 T (}) N
+(}) N
+(Edge.java) (Page 1/1) (Mar 11, 17 17:56) title
+border
+grestore
+(Printed by marcel) rhead
+(Edge.java) (5/14) (Monday March 13, 2017) footer
+end % of iso1dict
+pagesave restore
+showpage
+%%Page: (1-2) 6
+%%BeginPageSetup
+/pagesave save def
+sh 0 translate 90 rotate
+%%EndPageSetup
+iso1dict begin
+gsave
+llx lly 12 add translate
+/v 0 store
+/x0 x v get 3.362408 add sx cw mul add store
+/y0 y v get bfs th add sub store
+x0 y0 moveto
+(/***********************************************************************) C n
+( * cs3524.solutions.mud.MUD) N
+( ***********************************************************************/) N
+() p n
+(package) K
+( cs3524.solutions.mud;) p n
+() N
+(import) K
+( java.io.FileReader;) p n
+(import) K
+( java.io.BufferedReader;) p n
+(import) K
+( java.io.IOException;) p n
+(import) K
+( java.util.StringTokenizer;) p n
+() N
+(import) K
+( java.util.Iterator;) p n
+(import) K
+( java.util.List;) p n
+(import) K
+( java.util.Map;) p n
+(import) K
+( java.util.Vector;) p n
+(import) K
+( java.util.HashMap;) p n
+() N
+(/**) C n
+( * A class that can be used to represent a MUD; essenially, this is a) N
+( * graph.) N
+( */) N
+() p n
+(public) K
+( ) p
+(class) K
+( ) p
+(MUD) L n
+({) p n
+() S 8 T () S
+(/**) C n
+() S 8 T ( * Private stuff) N
+() S 8 T ( */) N
+() p n
+() S 8 T () S
+(// A record of all the vertices in the MUD graph. HashMaps are not) c n
+() p 8 T () S
+(// synchronized, but we don't really need this to be synchronised.) c n
+() p 8 T () S
+(private) K
+( Map<String,Vertex> vertexMap = ) p
+(new) K
+( HashMap<String,Vertex>\(\);) p n
+() N
+() S 8 T () S
+(private) K
+( String _startLocation = "";) p n
+() N
+() S 8 T () S
+(/**) C n
+() S 8 T ( * Add a new edge to the graph.) N
+() S 8 T ( */) N
+() p 8 T () S
+(private) K
+( ) p
+(void) k
+( addEdge\( String sourceName, ) p n
+() S 8 T () S 16 T () S 24 T (  String destName, ) N
+() S 8 T () S 16 T () S 24 T (  String direction, ) N
+() S 8 T () S 16 T () S 24 T (  String view \)) N
+() S 8 T ({) N
+() S 8 T () S 16 T (Vertex v = getOrCreateVertex\( sourceName \);) N
+() S 8 T () S 16 T (Vertex w = getOrCreateVertex\( destName \);) N
+() S 8 T () S 16 T (v._routes.put\( direction, ) S
+(new) K
+( Edge\( w, view \) \);) p n
+() S 8 T (}) N
+() N
+() S 8 T () S
+(/**) C n
+() S 8 T ( * Create a new thing at a location.) N
+() S 8 T ( */) N
+() p 8 T () S
+(private) K
+( ) p
+(void) k
+( createThing\( String loc, String thing \)) p n
+() S 8 T ({) N
+() S 8 T () S 16 T (Vertex v = getOrCreateVertex\( loc \);) N
+() S 8 T () S 16 T (v._things.add\( thing \);) N
+() S 8 T (}) N
+() N
+() S 8 T () S
+(/**) C n
+() S 8 T ( * Change the message associated with a location.) N
+() S 8 T ( */) N
+() p 8 T () S
+(private) K
+( ) p
+(void) k
+( changeMessage\( String loc, String msg \)) p n
+() S 8 T ({) N
+() S 8 T () S 16 T (Vertex v = getOrCreateVertex\( loc \);) N
+(MUD.java) (Page 1/6) (Mar 13, 17 0:45) title
+border
+/v 1 store
+/x0 x v get 3.362408 add sx cw mul add store
+/y0 y v get bfs th add sub store
+x0 y0 moveto
+() p 8 T () S 16 T (v._msg = msg;) N
+() S 8 T (}) N
+() N
+() S 8 T () S
+(/**) C n
+() S 8 T ( * If vertexName is not present, add it to vertexMap.  In either) N
+() S 8 T ( * case, return the Vertex. Used only for creating the MUD.) N
+() S 8 T ( */) N
+() p 8 T () S
+(private) K
+( Vertex getOrCreateVertex\( String vertexName \)) p n
+() S 8 T ({) N
+() S 8 T () S 16 T (Vertex v = vertexMap.get\( vertexName \);) N
+() S 8 T () S 16 T () S
+(if) K
+( \(v == ) p
+(null) k
+(\) {) p n
+() S 8 T () S 16 T () S 24 T (v = ) S
+(new) K
+( Vertex\( vertexName \);) p n
+() S 8 T () S 16 T () S 24 T (vertexMap.put\( vertexName, v \);) N
+() S 8 T () S 16 T (}) N
+() S 8 T () S 16 T () S
+(return) K
+( v;) p n
+() S 8 T (}) N
+() N
+() S 8 T () S
+(/**) C n
+() S 8 T ( *) N
+() S 8 T ( */) N
+() p 8 T () S
+(private) K
+( Vertex getVertex\( String vertexName \)) p n
+() S 8 T ({) N
+() S 8 T () S 16 T () S
+(return) K
+( vertexMap.get\( vertexName \);) p n
+() S 8 T (}) N
+() N
+() S 8 T () S
+(/**) C n
+() S 8 T ( * Creates the edges of the graph on the basis of a file with the) N
+() S 8 T ( * following fromat:) N
+() S 8 T ( * source direction destination message) N
+() S 8 T ( */) N
+() p 8 T () S
+(private) K
+( ) p
+(void) k
+( createEdges\( String edgesfile \)) p n
+() S 8 T ({) N
+() S 8 T () S
+(try) K
+( {) p n
+() S 8 T () S 16 T (FileReader fin = ) S
+(new) K
+( FileReader\( edgesfile \);) p n
+() S 8 T () S 16 T () S 24 T (BufferedReader edges = ) S
+(new) K
+( BufferedReader\( fin \);) p n
+() S 8 T () S 16 T () S 24 T (String line;) N
+() S 8 T () S 16 T () S 24 T () S
+(while) K
+(\(\(line = edges.readLine\(\)\) != ) p
+(null) k
+(\) {) p n
+() S 8 T () S 16 T () S 24 T () S 32 T (StringTokenizer st = ) S
+(new) K
+( StringTokenizer\( line \)) p n
+(;) N
+() S 8 T () S 16 T () S
+(if) K
+(\( st.countTokens\( \) < 3 \) {) p n
+() S 8 T () S 16 T () S 24 T (System.err.println\( ") S
+(Skipping ill-formatted line ) str
+(" + line \);) p n
+() S 8 T () S 16 T () S 24 T () S
+(continue) K
+(;) p n
+() S 8 T () S 16 T (}) N
+() S 8 T () S 16 T (String source = st.nextToken\(\);) N
+() S 8 T () S 16 T (String dir) S 32 T (  = st.nextToken\(\);) N
+() S 8 T () S 16 T (String dest   = st.nextToken\(\);) N
+() S 8 T () S 16 T (String msg = "";) N
+() S 8 T () S 16 T () S
+(while) K
+( \(st.hasMoreTokens\(\)\) {) p n
+() S 8 T () S 16 T () S 24 T (msg = msg + st.nextToken\(\) + ") S
+( ) str
+("; ) p n
+() S 8 T () S 16 T () S 24 T () S 32 T (}) N
+() S 8 T () S 16 T (addEdge\( source, dest, dir, msg \);) N
+() S 8 T () S 16 T (}) N
+() S 8 T (}) N
+() S 8 T () S
+(catch) K
+(\( IOException e \) {) p n
+() S 8 T () S 16 T (System.err.println\( ") S
+(Graph.createEdges\( String ) str
+(" + ) p n
+() S 8 T () S 16 T () S 24 T () S 32 T (edgesfile + ") S
+(\)\\n) str
+(" + e.getMessage\(\) \);) p n
+() S 8 T (}) N
+() S 8 T (}) N
+() N
+() S 8 T () S
+(/**) C n
+() S 8 T ( * Records the messages assocated with vertices in the graph on) N
+() S 8 T ( * the basis of a file with the following format:) N
+(MUD.java) (Page 2/6) (Mar 13, 17 0:45) title
+border
+grestore
+(Printed by marcel) rhead
+(MUD.java) (6/14) (Monday March 13, 2017) footer
+end % of iso1dict
+pagesave restore
+showpage
+%%Page: (3-4) 7
+%%BeginPageSetup
+/pagesave save def
+sh 0 translate 90 rotate
+%%EndPageSetup
+iso1dict begin
+gsave
+llx lly 12 add translate
+/v 0 store
+/x0 x v get 3.362408 add sx cw mul add store
+/y0 y v get bfs th add sub store
+x0 y0 moveto
+() C 8 T ( * location message) N
+() S 8 T ( * The first location is assumed to be the starting point for) N
+() S 8 T ( * users joining the MUD.) N
+() S 8 T ( */) N
+() p 8 T () S
+(private) K
+( ) p
+(void) k
+( recordMessages\( String messagesfile \)) p n
+() S 8 T ({) N
+() S 8 T () S
+(try) K
+( {) p n
+() S 8 T () S 16 T (FileReader fin = ) S
+(new) K
+( FileReader\( messagesfile \);) p n
+() S 8 T () S 16 T () S 24 T (BufferedReader messages = ) S
+(new) K
+( BufferedReader\( fin \);) p n
+() S 8 T () S 16 T () S 24 T (String line;) N
+() S 8 T () S 16 T () S
+(boolean) k
+( first = ) p
+(true) k
+(; ) p
+(// For recording the start location.) c n
+() p 8 T () S 16 T () S 24 T () S
+(while) K
+(\(\(line = messages.readLine\(\)\) != ) p
+(null) k
+(\) {) p n
+() S 8 T () S 16 T () S 24 T () S 32 T (StringTokenizer st = ) S
+(new) K
+( StringTokenizer\( line \)) p n
+(;) N
+() S 8 T () S 16 T () S
+(if) K
+(\( st.countTokens\( \) < 2 \) {) p n
+() S 8 T () S 16 T () S 24 T (System.err.println\( ") S
+(Skipping ill-formatted line ) str
+(" + line \);) p n
+() S 8 T () S 16 T () S 24 T () S
+(continue) K
+(;) p n
+() S 8 T () S 16 T (}) N
+() S 8 T () S 16 T (String loc = st.nextToken\(\);) N
+() S 8 T () S 16 T (String msg = "";) N
+() S 8 T () S 16 T () S
+(while) K
+( \(st.hasMoreTokens\(\)\) {) p n
+() S 8 T () S 16 T () S 24 T (msg = msg + st.nextToken\(\) + ") S
+( ) str
+("; ) p n
+() S 8 T () S 16 T () S 24 T () S 32 T (}) N
+() S 8 T () S 16 T (changeMessage\( loc, msg \);) N
+() S 8 T () S 16 T () S
+(if) K
+( \(first\) {) p 32 T (  ) S
+(// Record the start location.) c n
+() p 8 T () S 16 T () S 24 T (_startLocation = loc;) N
+() S 8 T () S 16 T () S 24 T (first = ) S
+(false) k
+(;) p n
+() S 8 T () S 16 T (}) N
+() S 8 T () S 16 T (}) N
+() S 8 T (}) N
+() S 8 T () S
+(catch) K
+(\( IOException e \) {) p n
+() S 8 T () S 16 T (System.err.println\( ") S
+(Graph.recordMessages\( String ) str
+(" + ) p n
+() S 8 T () S 16 T () S 24 T () S 32 T (messagesfile + ") S
+(\)\\n) str
+(" + e.getMessage\(\) \);) p n
+() S 8 T (}) N
+() S 8 T (}) N
+() N
+() S 8 T () S
+(/**) C n
+() S 8 T ( * Records the things assocated with vertices in the graph on) N
+() S 8 T ( * the basis of a file with the following format:) N
+() S 8 T ( * location thing1 thing2 ...) N
+() S 8 T ( */) N
+() p 8 T () S
+(private) K
+( ) p
+(void) k
+( recordThings\( String thingsfile \)) p n
+() S 8 T ({) N
+() S 8 T () S
+(try) K
+( {) p n
+() S 8 T () S 16 T (FileReader fin = ) S
+(new) K
+( FileReader\( thingsfile \);) p n
+() S 8 T () S 16 T () S 24 T (BufferedReader things = ) S
+(new) K
+( BufferedReader\( fin \);) p n
+() S 8 T () S 16 T () S 24 T (String line;) N
+() S 8 T () S 16 T () S 24 T () S
+(while) K
+(\(\(line = things.readLine\(\)\) != ) p
+(null) k
+(\) {) p n
+() S 8 T () S 16 T () S 24 T () S 32 T (StringTokenizer st = ) S
+(new) K
+( StringTokenizer\( line \)) p n
+(;) N
+() S 8 T () S 16 T () S
+(if) K
+(\( st.countTokens\( \) < 2 \) {) p n
+() S 8 T () S 16 T () S 24 T (System.err.println\( ") S
+(Skipping ill-formatted line ) str
+(" + line \);) p n
+() S 8 T () S 16 T () S 24 T () S
+(continue) K
+(;) p n
+() S 8 T () S 16 T (}) N
+() S 8 T () S 16 T (String loc = st.nextToken\(\);) N
+() S 8 T () S 16 T () S
+(while) K
+( \(st.hasMoreTokens\(\)\) {) p n
+() S 8 T () S 16 T () S 24 T (addThing\( loc, st.nextToken\(\)\); ) N
+() S 8 T () S 16 T () S 24 T () S 32 T (}) N
+() S 8 T () S 16 T (}) N
+() S 8 T (}) N
+() S 8 T () S
+(catch) K
+(\( IOException e \) {) p n
+() S 8 T () S 16 T (System.err.println\( ") S
+(Graph.recordThings\( String ) str
+(" + ) p n
+(MUD.java) (Page 3/6) (Mar 13, 17 0:45) title
+border
+/v 1 store
+/x0 x v get 3.362408 add sx cw mul add store
+/y0 y v get bfs th add sub store
+x0 y0 moveto
+() p 8 T () S 16 T () S 24 T () S 32 T (thingsfile + ") S
+(\)\\n) str
+(" + e.getMessage\(\) \);) p n
+() S 8 T (}) N
+() S 8 T (}) N
+() N
+() S 8 T () S
+(/**) C n
+() S 8 T ( * All the public stuff. These methods are designed to hide the) N
+() S 8 T ( * internal structure of the MUD. Could declare these on an) N
+() S 8 T ( * interface and have external objects interact with the MUD via) N
+() S 8 T ( * the interface.) N
+() S 8 T ( */) N
+() p n
+() S 8 T () S
+(/**) C n
+() S 8 T ( * A constructor that creates the MUD.) N
+() S 8 T ( */) N
+() p 8 T () S
+(public) K
+( MUD\( String edgesfile, String messagesfile, String thingsfile \)) p n
+() S 8 T ({) N
+() S 8 T (createEdges\( edgesfile \);) N
+() S 8 T (recordMessages\( messagesfile \);) N
+() S 8 T (recordThings\( thingsfile \);) N
+() N
+() S 8 T (System.out.println\( ") S
+(Files read...) str
+(" \);) p n
+() S 8 T (System.out.println\( vertexMap.size\( \) + ") S
+( vertices\\n) str
+(" \);) p n
+() S 8 T (}) N
+() N
+() S 8 T () S
+(// This method enables us to display the entire MUD \(mostly used) c n
+() p 8 T () S
+(// for testing purposes so that we can check that the structure) c n
+() p 8 T () S
+(// defined has been successfully parsed.) c n
+() p 8 T () S
+(public) K
+( String toString\(\)) p n
+() S 8 T ({) N
+() S 8 T (String summary = "";) N
+() S 8 T (Iterator iter = vertexMap.keySet\(\).iterator\(\);) N
+() S 8 T (String loc;) N
+() S 8 T () S
+(while) K
+( \(iter.hasNext\(\)\) {) p n
+() S 8 T () S 16 T (loc = \(String\)iter.next\(\);) N
+() S 8 T () S 16 T (summary = summary + ") S
+(Node: ) str
+(" + loc;) p n
+() S 8 T () S 16 T (summary += \(\(Vertex\)vertexMap.get\( loc \)\).toString\(\);) N
+() S 8 T (}) N
+() S 8 T (summary += ") S
+(Start location = ) str
+(" + _startLocation;) p n
+() S 8 T () S
+(return) K
+( summary;) p n
+() S 8 T (}) N
+() N
+() S 8 T () S
+(/**) C n
+() S 8 T ( * A method to provide a string describing a particular location.) N
+() S 8 T ( */) N
+() p 8 T () S
+(public) K
+( String locationInfo\( String loc \)) p n
+() S 8 T ({) N
+() S 8 T () S
+(return) K
+( getVertex\( loc \).toString\(\);) p n
+() S 8 T (}) N
+() N
+() S 8 T () S
+(//method that provides infor where a player can move) c n
+() p 8 T () S
+(public) K
+( String locationPaths\( String loc \)) p n
+() S 8 T ({) N
+() S 8 T () S 16 T (String message = getVertex\( loc \)._msg + ") S
+(\\n) str
+(";) p n
+() S 8 T () S 16 T () S
+(for) K
+( \(Map.Entry<String, Edge> vertex : getVertex\(loc\)._routes.ent) p n
+(rySet\(\)\)) N
+() S 8 T () S 16 T ({) N
+() S 8 T () S 16 T () S 24 T (message += ") S
+(You can move to the ) str
+(" + vertex.getKey\(\) + ") p
+( there is ) str
+(") p n
+( + vertex.getValue\(\)._view + ") S
+(\\n) str
+(";) p n
+() S 8 T () S 16 T (}) N
+() S 8 T () S 16 T () S
+(return) K
+( message;) p n
+() S 8 T (}) N
+() N
+(MUD.java) (Page 4/6) (Mar 13, 17 0:45) title
+border
+grestore
+(Printed by marcel) rhead
+(MUD.java) (7/14) (Monday March 13, 2017) footer
+end % of iso1dict
+pagesave restore
+showpage
+%%Page: (5-6) 8
+%%BeginPageSetup
+/pagesave save def
+sh 0 translate 90 rotate
+%%EndPageSetup
+iso1dict begin
+gsave
+llx lly 12 add translate
+/v 0 store
+/x0 x v get 3.362408 add sx cw mul add store
+/y0 y v get bfs th add sub store
+x0 y0 moveto
+() p 8 T () S
+(//method that provides info about things on location) c n
+() p 8 T () S
+(public) K
+( List locationThings\( String loc \)) p n
+() S 8 T ({) N
+() S 8 T () S 16 T (List<String> things = getVertex\(loc\)._things;) N
+() S 8 T () S 16 T () S
+(return) K
+( things;) p n
+() S 8 T (} ) N
+() S 8 T () N
+() S 8 T () S
+(/**) C n
+() S 8 T ( * Get the start location for new MUD users.) N
+() S 8 T ( */) N
+() p 8 T () S
+(public) K
+( String startLocation\(\)) p n
+() S 8 T ({) N
+() S 8 T () S
+(return) K
+( _startLocation;) p n
+() S 8 T (}) N
+() N
+() S 8 T () S
+(/**) C n
+() S 8 T ( * Add a thing to a location; used to enable us to add new users.) N
+() S 8 T ( */) N
+() p 8 T () S
+(public) K
+( ) p
+(void) k
+( addThing\( String loc,) p n
+() S 8 T () S 16 T () S 24 T (  String thing \)) N
+() S 8 T ({) N
+() S 8 T (Vertex v = getVertex\( loc \);) N
+() S 8 T (v._things.add\( thing \);) N
+() S 8 T (}) N
+() N
+() S 8 T () S
+(/**) C n
+() S 8 T ( * Remove a thing from a location.) N
+() S 8 T ( */) N
+() p 8 T () S
+(public) K
+( ) p
+(void) k
+( delThing\( String loc, ) p n
+() S 8 T () S 16 T () S 24 T (  String thing \)) N
+() S 8 T ({) N
+() S 8 T (Vertex v = getVertex\( loc \);) N
+() S 8 T (v._things.remove\( thing \);) N
+() S 8 T (}) N
+() N
+() S 8 T () S
+(/**) C n
+() S 8 T ( * A method to enable a player to move through the MUD \(a player) N
+() S 8 T ( * is a thing\). Checks that there is a route to travel on. Returns) N
+() S 8 T ( * the location moved to.) N
+() S 8 T ( */) N
+() p 8 T () S
+(public) K
+( String moveThing\( String loc, String dir, String thing \)) p n
+() S 8 T ({) N
+() S 8 T (Vertex v = getVertex\( loc \);) N
+() S 8 T (Edge e = v._routes.get\( dir \);) N
+() S 8 T () S
+(if) K
+( \(e == ) p
+(null) k
+(\)) p 24 T ( ) S
+(// if there is no route in that direction) c n
+() p 8 T () S 16 T () S
+(return) K
+( loc;  ) p
+(// no move is made; return current location.) c n
+() p 8 T (v._things.remove\( thing \);) N
+() S 8 T (e._dest._things.add\( thing \);) N
+() S 8 T () S
+(return) K
+( e._dest._name;) p n
+() S 8 T (}) N
+() N
+() S 8 T () S
+(/**) C n
+() S 8 T ( * A main method that can be used to testing purposes to ensure) N
+() S 8 T ( * that the MUD is specified correctly.) N
+() S 8 T ( */) N
+() p 8 T () S
+(public) K
+( ) p
+(static) K
+( ) p
+(void) k
+( main\(String[] args\)) p n
+() S 8 T ({) N
+() S 8 T () S
+(if) K
+( \(args.length != 3\) {) p n
+() S 8 T () S 16 T (System.err.println\(") S
+(Usage: java Graph <edgesfile> <messagesfile> <thingsfile>) str
+("\);) p n
+() S 8 T () S 16 T () S
+(return) K
+(;) p n
+() S 8 T (}) N
+() S 8 T (MUD m = ) S
+(new) K
+( MUD\( args[0], args[1], args[2] \);) p n
+(MUD.java) (Page 5/6) (Mar 13, 17 0:45) title
+border
+/v 1 store
+/x0 x v get 3.362408 add sx cw mul add store
+/y0 y v get bfs th add sub store
+x0 y0 moveto
+() p 8 T (System.out.println\( m.toString\(\) \);) N
+() S 8 T (}) N
+(}) N
+(MUD.java) (Page 6/6) (Mar 13, 17 0:45) title
+border
+grestore
+(Printed by marcel) rhead
+(MUD.java) (8/14) (Monday March 13, 2017) footer
+end % of iso1dict
+pagesave restore
+showpage
+%%Page: (1-2) 9
+%%BeginPageSetup
+/pagesave save def
+sh 0 translate 90 rotate
+%%EndPageSetup
+iso1dict begin
+gsave
+llx lly 12 add translate
+/v 0 store
+/x0 x v get 3.362408 add sx cw mul add store
+/y0 y v get bfs th add sub store
+x0 y0 moveto
+(/*) c 8 T (Author: Marcel Zak) N
+(*) S 8 T (version: 0.0) N
+(*/) N
+(package) K
+( cs3524.solutions.mud;) p n
+() N
+(import) K
+( java.rmi.*; ) p n
+(import) K
+( java.util.Iterator;) p n
+(import) K
+( java.util.List;) p n
+(import) K
+( java.util.Map;) p n
+(import) K
+( java.util.ArrayList;) p n
+(import) K
+( java.util.Set;) p n
+(import) K
+( java.util.HashMap;) p n
+() N
+() N
+(public) K
+( ) p
+(class) K
+( ) p
+(MUDServerImpl) L
+( ) p
+(implements) K
+( MUDServerInterface {) p n
+() N
+() S 8 T () S
+(private) K
+( Integer maxPlayers = 2;) p 40 T () S
+(// restrict number of players per server) c n
+() p 8 T () S
+(private) K
+( Integer maxServers = 3;) p 40 T () S
+(// restrict number of MUDs which can be ) c n
+(created) N
+() p 8 T () S
+(// serverMap holds all the MUDs. Key is a name and value is MUD object) c n
+() p 8 T () S
+(private) K
+( Map<String, MUD> serversMap = ) p
+(new) K
+( HashMap<String, MUD>\(\);) p n
+() S 8 T () S
+(// clientToServerMap holds records about where the client is) c n
+() p 8 T () S
+(private) K
+() p 16 T (Map<String, String> clientToServerMap = ) S
+(new) K
+( HashMap<String, Stri) p n
+(ng>\(\);) N
+() S 8 T () S
+(// serverToClientMap is a nested HashMap which holds records about) c n
+() p 8 T () S
+(// server name -> HashMap of all clients names logged in -> ClientInterf) c n
+(ace) N
+() p 8 T () S
+(private) K
+() p 16 T (Map<String, HashMap<String, ClientInterface>> serverToClientsMap) N
+( = ) S
+(new) K
+( HashMap<String, HashMap<String, ClientInterface>>\(\);) p n
+() S 8 T () S
+(// clientInventoryMap holds records of all clients inventories Name -> I) c n
+(nventory) N
+() p 8 T () S
+(private) K
+( Map<String, ArrayList<String>> clientInventoryMap = ) p
+(new) K
+( HashMap<) p n
+(String, ArrayList<String>>\(\);) N
+() S 8 T () S
+(// clientPositionMap holds records of all clients positions) c n
+() p 8 T () S
+(private) K
+( Map<String, String> clientPositionMap = ) p
+(new) K
+( HashMap<String, Stri) p n
+(ng>\(\); ) N
+() N
+() S 8 T () S
+(public) K
+( MUDServerImpl\(\) ) p
+(throws) K
+( RemoteException) p n
+() S 8 T ({) S 16 T () S
+(//create two servers at start ) c n
+() p 8 T () S 16 T (serversMap.put\(") S
+(Hades) str
+(", ) p
+(new) K
+( MUD\(") p
+(servers/hades/hades.edg) str
+(",") p
+(servers/hades/hade) str n
+(s.msg) S
+(",") p
+(servers/hades/hades.thg) str
+("\)\);) p n
+() S 8 T () S 16 T (HashMap<String, ClientInterface> clientsMap = ) S
+(new) K
+( HashMap<String) p n
+(, ClientInterface>\(\);) N
+() S 8 T () S 16 T (serverToClientsMap.put\( ") S
+(Hades) str
+(", clientsMap\);) p n
+() S 8 T () S 16 T (serversMap.put\(") S
+(Pathos) str
+(", ) p
+(new) K
+( MUD\(") p
+(servers/pathos/pathos.edg) str
+(",") p
+(servers/pathos/p) str n
+(athos.msg) S
+(",") p
+(servers/pathos/pathos.thg) str
+("\)\);) p n
+() S 8 T () S 16 T (clientsMap = ) S
+(new) K
+( HashMap<String, ClientInterface>\(\);) p n
+() S 8 T () S 16 T (serverToClientsMap.put\( ") S
+(Pathos) str
+(", clientsMap\);) p n
+() S 8 T (}) N
+() N
+() S 8 T () S
+(public) K
+( List<String> listServers\(\) ) p
+(throws) K
+( RemoteException ) p n
+() S 8 T ({) S 16 T () S
+(// list all the online MUDs) c n
+() p 8 T () S 16 T (Set<String> serversSet = serversMap.keySet\(\);) N
+() S 8 T () S 16 T () S
+(return) K
+( ) p
+(new) K
+( ArrayList<String>\(serversSet\);) p n
+() S 8 T (}) N
+() S 8 T () N
+() S 8 T () S
+(public) K
+( ) p
+(boolean) k
+( joinServer\(String serverName, ClientInterface client\) ) p
+(thr) K n
+(ows) S
+( RemoteException) p n
+() S 8 T ({) S 16 T () S
+(// join or create own server) c n
+() p 8 T () S 16 T (MUD server = serversMap.get\(serverName\);) N
+() S 8 T () S 16 T (String clientUserName = client.getUserName\(\);) N
+() S 8 T () S 16 T (HashMap<String, ClientInterface> clientsMap;) N
+(MUDServerImpl.java) (Page 1/5) (Mar 13, 17 10:49) title
+border
+/v 1 store
+/x0 x v get 3.362408 add sx cw mul add store
+/y0 y v get bfs th add sub store
+x0 y0 moveto
+() p 8 T () S 16 T () S
+(if) K
+( \(server == ) p
+(null) k
+(\)) p n
+() S 8 T () S 16 T ({) S 24 T () S
+(// server does not exist that means you want to create o) c n
+(wn MUD) N
+() p 8 T () S 16 T () S 24 T () S
+(if) K
+( \( serversMap.size\(\) >= maxServers \)) p n
+() S 8 T () S 16 T () S 24 T ({) S 32 T () S
+(// check if maxServers is reached) c n
+() p 8 T () S 16 T () S 24 T () S 32 T (client.sendMessage\( ") S
+(Maximum number of servers reached. T) str n
+(ry later.) S
+(" \);) p n
+() S 8 T () S 16 T () S 24 T () S 32 T () S
+(return) K
+( ) p
+(false) k
+(;) p n
+() S 8 T () S 16 T () S 24 T (}) N
+() S 8 T () S 16 T () S 24 T (serversMap.put\(clientUserName+") S
+('s server) str
+(", ) p
+(new) K
+( MUD\(") p
+(servers/vo) str n
+(id/void.edg) S
+(",") p
+(servers/void/void.msg) str
+(",") p
+(servers/void/void.thg) str
+("\)\);) p n
+() S 8 T () S 16 T () S 24 T (clientToServerMap.put\( clientUserName, clientUserName+") S
+(') str n
+(s server) S
+(" \);) p n
+() S 8 T () S 16 T () S 24 T (server = serversMap.get\(clientUserName+") S
+('s server) str
+("\);) p n
+() S 8 T () S 16 T () S 24 T () N
+() S 8 T () S 16 T () S 24 T (clientsMap = ) S
+(new) K
+( HashMap<String, ClientInterface>\(\);) p n
+() S 8 T () S 16 T () S 24 T (clientsMap.put\( clientUserName, client \); ) N
+() S 8 T () S 16 T () S 24 T (serverToClientsMap.put\( clientUserName+") S
+('s server) str
+(", clients) p n
+(Map \);) N
+() N
+() S 8 T () S 16 T () S 24 T (clientPositionMap.put\( clientUserName, server.startLocat) N
+(ion\(\) \);) N
+() S 8 T () S 16 T () S 24 T () N
+() S 8 T () S 16 T () S 24 T (clientInventoryMap.put\( clientUserName, ) S
+(new) K
+( ArrayList<St) p n
+(ring>\(\) \);) N
+() S 8 T () S 16 T () S 24 T () N
+() S 8 T () S 16 T () S 24 T (server.addThing\( server.startLocation\(\), ") S
+(User: ) str
+("+clientU) p n
+(serName \);) N
+() S 8 T () N
+() S 8 T () S 16 T () S 24 T (String message = ") S
+(\\n~~~Welcome to ) str
+("+clientUserName+") p
+('s Server~) str n
+(~~\\n) S
+(";) p n
+() S 8 T () S 16 T () S 24 T (message += ") S
+(You are currently at ) str
+("+clientPositionMap.get\( clien) p n
+(tUserName \)+") S
+( location\\n) str
+(";) p n
+() S 8 T () S 16 T () S 24 T (client.sendMessage\( message \);) S 56 T () S
+(// inform the client) c n
+() p 8 T () S 16 T () S 24 T () S
+(return) K
+( ) p
+(true) k
+(; ) p n
+() S 8 T () S 16 T (}) N
+() S 8 T () S 16 T () S
+(if) K
+(\(serverToClientsMap.get\(serverName\).size\(\) >= maxPlayers\)) p n
+() S 8 T () S 16 T ({) S 24 T () S
+(// check if maxPlayers is reached) c n
+() p 8 T () S 16 T () S 24 T (client.sendMessage\( ") S
+(Sorry maximum players reached. Try later or join a) str n
+(nother server) S
+(" \);) p n
+() S 8 T () S 16 T () S 24 T () S
+(return) K
+( ) p
+(false) k
+(;) p n
+() S 8 T () S 16 T (}) N
+() S 8 T () S 16 T () S
+(if) K
+( \( clientToServerMap.get\( clientUserName \) != ) p
+(null) k
+( \) ) p n
+() S 8 T () S 16 T ({) S 24 T () S
+(// check if clientUserName already exist. It must be uni) c n
+(que) N
+() p 8 T () S 16 T () S 24 T (client.sendMessage\( ") S
+(Change name please! User already exist!) str
+(" \);) p n
+() S 8 T () S 16 T () S 24 T () S
+(return) K
+( ) p
+(false) k
+(;) p n
+() S 8 T () S 16 T (}) N
+() S 8 T () S 16 T () S
+(// create user) c n
+() p 8 T () S 16 T (clientToServerMap.put\( clientUserName, serverName \);) N
+() S 8 T () S 16 T (clientsMap = serverToClientsMap.get\( serverName \);) N
+() S 8 T () S 16 T (clientsMap.put\( clientUserName, client \);) N
+() S 8 T () S 16 T (serverToClientsMap.put\( serverName, clientsMap \);) N
+() S 8 T () S 16 T (clientPositionMap.put\( clientUserName, server.startLocation\(\) \);) N
+() S 8 T () S 16 T (clientInventoryMap.put\( clientUserName, ) S
+(new) K
+( ArrayList<String>\(\) ) p n
+(\);) N
+() S 8 T () S 16 T (server.addThing\( server.startLocation\(\), ") S
+(User: ) str
+("+clientUserName ) p n
+(\);) N
+() S 8 T () S 16 T () S
+(// prepare the message) c n
+() p 8 T () S 16 T (String message = \( ") S
+(\\n~~~Welcome to ) str
+("+serverName+") p
+( Server~~~\\n) str
+(" \);) p n
+() S 8 T () S 16 T (message += ") S
+(Current number of player on this server is ) str
+("+serverToClientsMap.ge) p n
+(t\( serverName \).size\(\)+") S
+(\\n) str
+(";) p n
+(MUDServerImpl.java) (Page 2/5) (Mar 13, 17 10:49) title
+border
+grestore
+(Printed by marcel) rhead
+(MUDServerImpl.java) (9/14) (Monday March 13, 2017) footer
+end % of iso1dict
+pagesave restore
+showpage
+%%Page: (3-4) 10
+%%BeginPageSetup
+/pagesave save def
+sh 0 translate 90 rotate
+%%EndPageSetup
+iso1dict begin
+gsave
+llx lly 12 add translate
+/v 0 store
+/x0 x v get 3.362408 add sx cw mul add store
+/y0 y v get bfs th add sub store
+x0 y0 moveto
+() p 8 T () S 16 T (message += ") S
+(You are currently at ) str
+("+clientPositionMap.get\( clientUserNam) p n
+(e \)+") S
+( location\\n) str
+(";) p n
+() S 8 T () S 16 T () S
+(// send the message to the client) c n
+() p 8 T () S 16 T (client.sendMessage\( message \);) N
+() S 8 T () S 16 T () S
+(return) K
+( ) p
+(true) k
+(;) p n
+() S 8 T (}) S 16 T () N
+() S 8 T () N
+() S 8 T () S
+(public) K
+( ) p
+(boolean) k
+( leaveServer\( String clientUserName \) ) p
+(throws) K
+( RemoteExcepti) p n
+(on) N
+() S 8 T ({) S 16 T () S
+(// leave server) c n
+() p 8 T () S 16 T (String serverName = clientToServerMap.get\( clientUserName \);) N
+() S 8 T () S 16 T (MUD server = serversMap.get\( serverName \);) N
+() S 8 T () S 16 T (HashMap<String, ClientInterface> clientsMap = serverToClientsMap) N
+(.get\( serverName \);) N
+() S 8 T () S 16 T (ClientInterface client = clientsMap.get\( clientUserName \);) N
+() S 8 T () S 16 T (String position = clientPositionMap.get\( clientUserName \);) N
+() S 8 T () S 16 T () N
+() S 8 T () S 16 T () S
+(if) K
+( \( serverName  == ) p
+(null) k
+( \) ) p n
+() S 8 T () S 16 T ({) S 24 T () S
+(// user does not exist) c n
+() p 8 T () S 16 T () S 24 T (client.sendMessage\( ") S
+(Error the user does not exist at the server\\n) str
+(" \);) p n
+() S 8 T () S 16 T () S 24 T () S
+(return) K
+( ) p
+(false) k
+(; ) p n
+() S 8 T () S 16 T (}) N
+() S 8 T () S 16 T () N
+() S 8 T () S 16 T () S
+(if) K
+( \( serverName.equals\( clientUserName+") p
+('s server) str
+(" \) \)) p n
+() S 8 T () S 16 T ({) S 24 T () S
+(// used had own server) c n
+() p 8 T () S 16 T () S 24 T (serversMap.remove\( clientUserName+") S
+('s server) str
+(" \);) p n
+() S 8 T () S 16 T () S 24 T (serverToClientsMap.remove\( clientUserName+") S
+('s server) str
+(" \);) p n
+() S 8 T () S 16 T (} ) N
+() S 8 T () S 16 T () S
+(else) K
+( ) p n
+() S 8 T () S 16 T ({) S 24 T () S
+(// delete users records) c n
+() p 8 T () S 16 T () S 24 T (server.delThing\( position  ,") S
+(User: ) str
+("+clientUserName \);) p n
+() S 8 T () S 16 T () S 24 T (serversMap.put\( serverName, server\);) N
+() S 8 T () S 16 T () S 24 T (clientsMap.remove\( clientUserName \);) N
+() S 8 T () S 16 T () S 24 T (serverToClientsMap.put\( serverName, clientsMap \);) N
+() S 8 T () S 16 T (}) N
+() S 8 T () S 16 T () S
+(// send bye message) c n
+() p 8 T () S 16 T (client.sendMessage\( ") S
+(BB see you soon!) str
+(" \);) p n
+() S 8 T () S 16 T (clientToServerMap.remove\( clientUserName \);) N
+() S 8 T () S 16 T (clientInventoryMap.remove\( clientUserName \);) N
+() S 8 T () S 16 T (clientPositionMap.remove\( clientUserName \);) S 64 T () N
+() S 8 T () S 16 T () S
+(return) K
+( ) p
+(true) k
+(;) p n
+() S 8 T () S 16 T () S 24 T () S 32 T () N
+() S 8 T (}) N
+() S 8 T () N
+() S 8 T () S
+(public) K
+( ) p
+(boolean) k
+( view\( String clientUserName, String what \) ) p
+(throws) K
+( RemoteE) p n
+(xception) N
+() S 8 T ({) S 16 T () S
+(// view what is at particular location) c n
+() p 8 T () S 16 T (String serverName = clientToServerMap.get\( clientUserName \);) N
+() S 8 T () S 16 T (MUD server = serversMap.get\( serverName \);) N
+() S 8 T () S 16 T (HashMap<String, ClientInterface> clientsMap = serverToClientsMap) N
+(.get\( serverName \);) N
+() S 8 T () S 16 T (ClientInterface client = clientsMap.get\( clientUserName \);) N
+() S 8 T () S 16 T (String position = clientPositionMap.get\( clientUserName \);) N
+() S 8 T () S 16 T (String message = ) S
+(null) k
+(;) p n
+() N
+() S 8 T () S 16 T () S
+(if) K
+( \( what.equals\(") p
+(paths) str
+("\) \) ) p n
+() S 8 T () S 16 T ({) S 24 T () S
+(// send info about possible paths) c n
+() p 8 T () S 16 T () S 24 T (message = server.locationPaths\( position \);) N
+() S 8 T () S 16 T () S 24 T (client.sendMessage\( message \);) N
+() S 8 T () S 16 T () S 24 T () S
+(return) K
+( ) p
+(true) k
+(;) p 40 T () S 48 T () S 56 T () N
+() S 8 T () S 16 T (}) N
+() N
+(MUDServerImpl.java) (Page 3/5) (Mar 13, 17 10:49) title
+border
+/v 1 store
+/x0 x v get 3.362408 add sx cw mul add store
+/y0 y v get bfs th add sub store
+x0 y0 moveto
+() p 8 T () S 16 T () S
+(if) K
+( \( what.equals\(") p
+(things) str
+("\) \)) p n
+() S 8 T () S 16 T ({) S 24 T () S
+(// send info about things) c n
+() p 8 T () S 16 T () S 24 T (message = ") S
+(There is:\\n) str
+(";) p n
+() S 8 T () S 16 T () S 24 T (List<String> things = server.locationThings\( position \);) N
+() S 8 T () S 16 T () S 24 T () S
+(for) K
+( \( String t : things \)) p n
+() S 8 T () S 16 T () S 24 T ({) S 32 T () S
+(// construct the message and send) c n
+() p 8 T () S 16 T () S 24 T () S 32 T (message += t + ") S
+(\\n) str
+(";) p n
+() S 8 T () S 16 T () S 24 T (}) N
+() S 8 T () S 16 T () S 24 T (client.sendMessage\( message \);) N
+() S 8 T () S 16 T () S 24 T () S
+(return) K
+( ) p
+(true) k
+(;) p n
+() S 8 T () S 16 T (}) N
+() S 8 T () S 16 T () S
+(return) K
+( ) p
+(false) k
+(;) p n
+() S 8 T (}) N
+() S 8 T () N
+() S 8 T () S
+(public) K
+( ) p
+(boolean) k
+( moveUser\(String clientUserName, String position\) ) p
+(throws) K
+( R) p n
+(emoteException) N
+() S 8 T ({) S 16 T () S
+(// move the user) c n
+() p 8 T () S 16 T (String serverName = clientToServerMap.get\( clientUserName \);) N
+() S 8 T () S 16 T (MUD server = serversMap.get\( serverName \);) N
+() S 8 T () S 16 T (HashMap<String, ClientInterface> clientsMap = serverToClientsMap) N
+(.get\( serverName \);) N
+() S 8 T () S 16 T (ClientInterface client = clientsMap.get\( clientUserName \);) N
+() S 8 T () S 16 T (String origin = clientPositionMap.get\( clientUserName \);) N
+() S 8 T () S 16 T (String message = "";) N
+() S 8 T () S 16 T () S
+(// try to move the user and check response) c n
+() p 8 T () S 16 T (message = server.moveThing\( origin, position, ") S
+(User: ) str
+("+clientUser) p n
+(Name \);) N
+() S 8 T () S 16 T (clientPositionMap.put\( clientUserName, message \);) N
+() S 8 T () S 16 T () S
+(if) K
+( \( message.equals\( origin \) \) ) p n
+() S 8 T () S 16 T ({) S 24 T () S
+(// user is at the same place because there is no path) c n
+() p 8 T () S 16 T () S 24 T (client.sendMessage\( ") S
+(You cannot move there.\\n) str
+(" \);) p n
+() S 8 T () S 16 T () S 24 T () S
+(return) K
+( ) p
+(false) k
+(;) p n
+() S 8 T () S 16 T (}) N
+() S 8 T () S 16 T (client.sendMessage\( ") S
+(You moved to ) str
+(" + message + ") p
+(\\n) str
+("\);) p n
+() S 8 T () S 16 T () S
+(return) K
+( ) p
+(true) k
+(;) p n
+() S 8 T (}) N
+() N
+() N
+() N
+() S 8 T () S
+(public) K
+( ) p
+(boolean) k
+( getThing\( String clientUserName, String thing\) ) p
+(throws) K
+( Rem) p n
+(oteException) N
+() S 8 T ({) S 16 T () S
+(// client can take a thing but not a user) c n
+() p 8 T () S 16 T () N
+() S 8 T () S 16 T (String serverName = clientToServerMap.get\( clientUserName \);) N
+() S 8 T () S 16 T (MUD server = serversMap.get\( serverName \);) N
+() S 8 T () S 16 T (HashMap<String, ClientInterface> clientsMap = serverToClientsMap) N
+(.get\( serverName \);) N
+() S 8 T () S 16 T (ClientInterface client = clientsMap.get\( clientUserName \);) N
+() S 8 T () S 16 T (ArrayList<String> inventory = clientInventoryMap.get\( clientUser) N
+(Name \);) N
+() S 8 T () S 16 T (List<String> things = server.locationThings\( clientPositionMap.g) N
+(et\( clientUserName \) \);) N
+() S 8 T () N
+() S 8 T () S 16 T () S
+(for) K
+( \( String t : things \)) p n
+() S 8 T () S 16 T ({) S 24 T () S
+(// iterate through things) c n
+() p 8 T () S 16 T () S 24 T () S
+(if) K
+( \( thing.equals\( t \) && !thing.contains\(") p
+(User:) str
+("\) \)) p n
+() S 8 T () S 16 T () S 24 T ({) S 32 T () S
+(// check if there is the thing client wants to t) c n
+(ake) N
+() p 8 T () S 16 T () S 24 T () S 32 T () S
+(// && check of the thing is not user) c n
+() p 8 T () S 16 T () S 24 T () S 32 T (server.delThing\( clientPositionMap.get\( clientUs) N
+(erName \), t \);) N
+() S 8 T () S 16 T () S 24 T () S 32 T (inventory.add\( t \);) N
+(MUDServerImpl.java) (Page 4/5) (Mar 13, 17 10:49) title
+border
+grestore
+(Printed by marcel) rhead
+(MUDServerImpl.java) (10/14) (Monday March 13, 2017) footer
+end % of iso1dict
+pagesave restore
+showpage
+%%Page: (5) 11
+%%BeginPageSetup
+/pagesave save def
+sh 0 translate 90 rotate
+%%EndPageSetup
+iso1dict begin
+gsave
+llx lly 12 add translate
+/v 0 store
+/x0 x v get 3.362408 add sx cw mul add store
+/y0 y v get bfs th add sub store
+x0 y0 moveto
+() p 8 T () S 16 T () S 24 T () S 32 T (clientInventoryMap.put\( clientUserName, inventor) N
+(y \);) N
+() S 8 T () S 16 T () S 24 T () S 32 T (client.sendMessage\( ") S
+(You have: ) str
+("+inventory.toStrin) p n
+(g\(\) \);) N
+() S 8 T () S 16 T () S 24 T () S 32 T () S
+(return) K
+( ) p
+(true) k
+(;) p n
+() S 8 T () S 16 T () S 24 T (}) N
+() S 8 T () S 16 T (}) N
+() S 8 T () S 16 T () S
+(// the thing was not there or it was a user) c n
+() p 8 T () S 16 T (client.sendMessage\( ") S
+(No!\\nYou have: ) str
+("+inventory.toString\(\) \);) p n
+() S 8 T () S 16 T () S
+(return) K
+( ) p
+(false) k
+(;) p n
+() S 8 T () S 16 T () S 24 T () S 32 T () S 40 T () N
+() S 8 T (}) N
+() S 8 T () N
+() S 8 T () S
+(public) K
+( ) p
+(boolean) k
+( showInventory\( String clientUserName \) ) p
+(throws) K
+( RemoteExcep) p n
+(tion) N
+() S 8 T ({) S 16 T () S
+(// list all the collected items) c n
+() p 8 T () S 16 T (String serverName = clientToServerMap.get\( clientUserName \);) N
+() S 8 T () S 16 T (MUD server = serversMap.get\( serverName \);) N
+() S 8 T () S 16 T (HashMap<String, ClientInterface> clientsMap = serverToClientsMap) N
+(.get\( serverName \);) N
+() S 8 T () S 16 T (ClientInterface client = clientsMap.get\( clientUserName \);) N
+() S 8 T () S 16 T (List<String> inventory =  clientInventoryMap.get\(clientUserName\)) N
+(;) N
+() S 8 T () S 16 T (String message = ") S
+(In your inventory is:\\n) str
+(";) p n
+() S 8 T () S 16 T (client.sendMessage\( message+inventory.toString\(\) \);) N
+() S 8 T () S 16 T () S
+(return) K
+( ) p
+(true) k
+(;) p n
+() S 8 T (}) N
+() S 8 T () N
+() S 8 T () S
+(public) K
+( ) p
+(boolean) k
+( listUsers\( String clientUserName \) ) p
+(throws) K
+( RemoteException) p n
+() S 8 T ({) S 16 T () S
+(// list all the online users at the server where client is.) c n
+() p 8 T () S 16 T (String serverName = clientToServerMap.get\( clientUserName \);) N
+() S 8 T () S 16 T (MUD server = serversMap.get\( serverName \);) N
+() S 8 T () S 16 T (HashMap<String, ClientInterface> clientsMap = serverToClientsMap) N
+(.get\( serverName \);) N
+() S 8 T () S 16 T (ClientInterface client = clientsMap.get\( clientUserName \);) N
+() S 8 T () S 16 T (String message = ") S
+(\\nThese users are online:\\n) str
+(";) p n
+() S 8 T () S 16 T (Set<String> clientsSet = clientsMap.keySet\(\);) N
+() S 8 T () S 16 T () S
+(for) K
+( \(String c : clientsSet \)) p n
+() S 8 T () S 16 T ({) N
+() S 8 T () S 16 T () S 24 T (message += c+") S
+(\\n) str
+(";) p n
+() S 8 T () S 16 T (}) N
+() S 8 T () S 16 T (client.sendMessage\( message \);) N
+() S 8 T () S 16 T () S
+(return) K
+( ) p
+(true) k
+(;) p 32 T () S 40 T () N
+() S 8 T (}) N
+() S 8 T () N
+() S 8 T () S
+(public) K
+( ) p
+(boolean) k
+( message\( String clientUserName, String to, String message) p n
+( \) ) S
+(throws) K
+( RemoteException) p n
+() S 8 T ({) S 16 T () S
+(// send a message to a user) c n
+() p 8 T () S 16 T (String serverName = clientToServerMap.get\( clientUserName \);) N
+() S 8 T () S 16 T (MUD server = serversMap.get\( serverName \);) N
+() S 8 T () S 16 T (HashMap<String, ClientInterface> clientsMap = serverToClientsMap) N
+(.get\( serverName \);) N
+() S 8 T () S 16 T (ClientInterface fromClient = clientsMap.get\( clientUserName \);) N
+() S 8 T () S 16 T (ClientInterface toClient = clientsMap.get\( to \);) N
+() S 8 T () S 16 T (String formatedMessage = ") S
+(Message from ) str
+(" + clientUserName + ") p
+(:\\n) str
+(" + ) p n
+(message;) N
+() S 8 T () S 16 T (toClient.sendMessage\( formatedMessage \);) N
+() S 8 T () S 16 T (fromClient.sendMessage\( ") S
+(\\nMessage sent\\n) str
+(" \);) p n
+() S 8 T () S 16 T () S
+(return) K
+( ) p
+(true) k
+(;) p 32 T () N
+() S 8 T (}) N
+(}) N
+(MUDServerImpl.java) (Page 5/5) (Mar 13, 17 10:49) title
+border
+grestore
+(Printed by marcel) rhead
+(MUDServerImpl.java) (11/14) (Monday March 13, 2017) footer
+end % of iso1dict
+pagesave restore
+showpage
+%%Page: (1) 12
+%%BeginPageSetup
+/pagesave save def
+sh 0 translate 90 rotate
+%%EndPageSetup
+iso1dict begin
+gsave
+llx lly 12 add translate
+/v 0 store
+/x0 x v get 3.362408 add sx cw mul add store
+/y0 y v get bfs th add sub store
+x0 y0 moveto
+(/*) c 8 T (Author: Marcel Zak) N
+(*) S 8 T (version: 0.0) N
+(*/) N
+() p n
+(package) K
+( cs3524.solutions.mud;) p n
+() N
+(import) K
+( java.rmi.Remote;) p n
+(import) K
+( java.rmi.RemoteException;) p n
+(import) K
+( java.util.List;) p n
+() N
+(public) K
+( ) p
+(interface) K
+( ) p
+(MUDServerInterface) L
+( ) p
+(extends) K
+( Remote) p n
+({) N
+(    ) N
+() S 8 T () S
+(public) K
+( List<String> listServers\(\) ) p
+(throws) K
+( RemoteException;) p n
+() S 8 T () S
+(public) K
+( ) p
+(boolean) k
+( joinServer\( String serverName, ClientInterface client \) ) p
+(t) K n
+(hrows) S
+( RemoteException;) p n
+() S 8 T () S
+(public) K
+( ) p
+(boolean) k
+( leaveServer\( String clientUserName \) ) p
+(throws) K
+( RemoteExcepti) p n
+(on;) N
+() S 8 T () S
+(public) K
+( ) p
+(boolean) k
+( view\( String clientUserName, String way \) ) p
+(throws) K
+( RemoteEx) p n
+(ception;) N
+() S 8 T () S
+(public) K
+( ) p
+(boolean) k
+( moveUser\( String clientUserName, String position \) ) p
+(throws) K
+() p n
+( RemoteException;) N
+() S 8 T () S
+(public) K
+( ) p
+(boolean) k
+( getThing\( String clientUserName, String thing \) ) p
+(throws) K
+( Re) p n
+(moteException;) N
+() S 8 T () S
+(public) K
+( ) p
+(boolean) k
+( showInventory\( String clientUserName \) ) p
+(throws) K
+( RemoteExcep) p n
+(tion;) N
+() S 8 T () S
+(public) K
+( ) p
+(boolean) k
+( listUsers\( String clientUserName \) ) p
+(throws) K
+( RemoteException) p n
+(;) N
+() S 8 T () S
+(public) K
+( ) p
+(boolean) k
+( message\( String clientUserName, String to, String message) p n
+( \) ) S
+(throws) K
+( RemoteException;) p n
+(}) N
+(MUDServerInterface.java) (Page 1/1) (Mar 13, 17 0:45) title
+border
+grestore
+(Printed by marcel) rhead
+(MUDServerInterface.java) (12/14) (Monday March 13, 2017) footer
+end % of iso1dict
+pagesave restore
+showpage
+%%Page: (1) 13
+%%BeginPageSetup
+/pagesave save def
+sh 0 translate 90 rotate
+%%EndPageSetup
+iso1dict begin
+gsave
+llx lly 12 add translate
+/v 0 store
+/x0 x v get 3.362408 add sx cw mul add store
+/y0 y v get bfs th add sub store
+x0 y0 moveto
+(/*) c 8 T (Author: Marcel Zak) N
+(*) S 8 T (version: 0.0) N
+(*/) N
+() p n
+(package) K
+( cs3524.solutions.mud;) p n
+() N
+(import) K
+( java.io.BufferedReader;) p n
+(import) K
+( java.io.InputStreamReader;) p n
+(import) K
+( java.net.InetAddress;) p n
+(import) K
+( java.rmi.Naming;) p n
+(import) K
+( java.rmi.RMISecurityManager;) p n
+(import) K
+( java.rmi.server.UnicastRemoteObject;) p n
+() N
+(public) K
+( ) p
+(class) K
+( ) p
+(MUDServerMainline) L
+( {) p n
+() S 8 T () N
+() S 8 T () S
+(static) K
+( BufferedReader in = ) p
+(new) K
+( BufferedReader\( ) p
+(new) K
+( InputStreamReader\( Sy) p n
+(stem.in \)\);) N
+() N
+() S 8 T () N
+() S 8 T () S
+(public) K
+( ) p
+(static) K
+( ) p
+(void) k
+( main\(String args[]\){) p n
+() S 8 T () N
+() S 8 T () S
+(if) K
+(\(args.length < 2\){) p n
+() S 8 T () S 16 T (System.err.println\(") S
+(Usage:\\n java MUDServerMainline <registryport> <serverport>) str
+(") p n
+(\);) N
+() S 8 T () S 16 T () S
+(return) K
+(;) p n
+() S 8 T (} ) N
+() S 8 T () N
+() S 8 T () S
+(try) K
+( {) p n
+() S 8 T () S 16 T (String hostname = \(InetAddress.getLocalHost\(\)\).getCanonicalHostN) N
+(ame\(\);) N
+() S 8 T () S 16 T () S
+(int) k
+( registryPort = Integer.parseInt\(args[0]\);) p n
+() S 8 T () S 16 T () S
+(int) k
+( serverPort = Integer.parseInt\(args[1]\);   ) p n
+() S 8 T () S 16 T () S 24 T () N
+() S 8 T () S 16 T () S
+(// Setup Security ) c n
+() p 8 T () S 16 T (System.setProperty\(") S
+(java.security.policy) str
+(", ") p
+(mud.policy) str
+("\);) p n
+() S 8 T () S 16 T (System.setSecurityManager\( ) S
+(new) K
+( RMISecurityManager\(\) \);) p n
+() N
+() S 8 T () S 16 T () S
+(// Generate the remote objects) c n
+() p 8 T () S 16 T (MUDServerImpl mudserver = ) S
+(new) K
+( MUDServerImpl\(\);) p n
+() S 8 T () S 16 T (MUDServerInterface mudstub = \(MUDServerInterface\)UnicastRemoteOb) N
+(ject.exportObject\(mudserver, serverPort\);) N
+() S 8 T () S 16 T () N
+() S 8 T () S 16 T (String regURL = ") S
+(rmi://) str
+(" + hostname + ") p
+(:) str
+(" + registryPort + ") p
+(/MUDSer) str n
+(ver) S
+(";) p n
+() S 8 T () S 16 T (System.out.println\(") S
+(Registering ) str
+(" + regURL\);) p n
+() S 8 T () S 16 T (Naming.rebind\(regURL, mudstub\);) N
+() S 8 T (  ) N
+() S 8 T (} ) N
+() S 8 T () S
+(catch) K
+( \(java.net.UnknownHostException e\) {) p n
+() S 8 T () S 16 T (System.err.println\(") S
+(Java can't determine the local host!) str
+("\);) p n
+() S 8 T (}) N
+() S 8 T () S
+(catch) K
+( \(java.io.IOException e\){) p n
+() S 8 T () S 16 T (System.err.println\(") S
+(Failed to regitser.) str
+("\);) p n
+() S 8 T (}) N
+() S 8 T () N
+() S 8 T (}) N
+() S 8 T () N
+(}) N
+(MUDServerMainline.java) (Page 1/1) (Mar 12, 17 13:40) title
+border
+grestore
+(Printed by marcel) rhead
+(MUDServerMainline.java) (13/14) (Monday March 13, 2017) footer
+end % of iso1dict
+pagesave restore
+showpage
+%%Page: (1) 14
+%%BeginPageSetup
+/pagesave save def
+sh 0 translate 90 rotate
+%%EndPageSetup
+iso1dict begin
+gsave
+llx lly 12 add translate
+/v 0 store
+/x0 x v get 3.362408 add sx cw mul add store
+/y0 y v get bfs th add sub store
+x0 y0 moveto
+(/***********************************************************************) C n
+( * cs3524.solutions.mud.Vertex) N
+( ***********************************************************************/) N
+() p n
+(package) K
+( cs3524.solutions.mud;) p n
+() N
+(import) K
+( java.util.Map;) p n
+(import) K
+( java.util.HashMap;) p n
+(import) K
+( java.util.List;) p n
+(import) K
+( java.util.Vector;) p n
+(import) K
+( java.util.Iterator;) p n
+() N
+(// Represents a location in the MUD \(a vertex in the graph\).) c n
+(class) K
+( ) p
+(Vertex) L n
+({) p n
+() S 8 T () S
+(public) K
+( String _name;) p 32 T () S 40 T ( ) S
+(// Vertex name) c n
+() p 8 T () S
+(public) K
+( String _msg = "";) p 40 T () S 48 T ( ) S
+(// Message about this location) c n
+() p 8 T () S
+(public) K
+( Map<String,Edge> _routes; ) p
+(// Association between direction) c n
+() p 8 T () S 16 T () S 24 T () S 32 T () S 40 T ( ) S
+(// \(e.g. "north"\) and a path) c n
+() p 8 T () S 16 T () S 24 T () S 32 T () S 40 T ( ) S
+(// \(Edge\)) c n
+() p 8 T () S
+(public) K
+( List<String> _things;) p 40 T ( ) S
+(// The things \(e.g. players\) at) c n
+() p 8 T () S 16 T () S 24 T () S 32 T () S 40 T ( ) S
+(// this location) c n
+() p n
+() S 8 T () S
+(public) K
+( Vertex\( String nm \)) p n
+() S 8 T ({) N
+() S 8 T () S 16 T (_name = nm; ) N
+() S 8 T () S 16 T (_routes = ) S
+(new) K
+( HashMap<String,Edge>\(\); ) p
+(// Not synchronised) c n
+() p 8 T () S 16 T (_things = ) S
+(new) K
+( Vector<String>\(\);) p 48 T () S 56 T (  ) S
+(// Synchronised) c n
+() p 8 T (}) N
+() N
+(}) N
+(Vertex.java) (Page 1/1) (Mar 11, 17 18:21) title
+border
+grestore
+(Printed by marcel) rhead
+(Vertex.java) (14/14) (Monday March 13, 2017) footer
+end % of iso1dict
+pagesave restore
+showpage
+
+%%Trailer
+end
+%%EOF

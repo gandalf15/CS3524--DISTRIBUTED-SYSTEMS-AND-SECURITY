@@ -15,7 +15,7 @@ public class ClientImpl implements ClientInterface {
   	public String getUserName() 
 	{
 		String name = clientUserName;
-    	return name;
+	    	return name;
   	}
 
   	public void sendMessage(String message)
